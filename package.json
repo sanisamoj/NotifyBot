@@ -1,0 +1,24 @@
+{
+  "name": "notify-bot",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/jsonwebtoken": "^9.0.6",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "jsonwebtoken": "^9.0.2",
+    "venom-bot": "^5.1.0"
+  }
+}
