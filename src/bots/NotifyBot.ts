@@ -5,6 +5,7 @@ import { BotCreateData } from '../data/models/interfaces/BotCreateData'
 import { AdminService } from '../services/AdminService'
 import { Config } from '../Config'
 import { SocketStream } from 'venom-bot/dist/api/model/enum'
+import { HostDeviceInfo } from '../data/models/interfaces/HostDeviceInfo'
 
 export class NotifyBot {
     id: string;
@@ -40,47 +41,48 @@ export class NotifyBot {
                 autoClose: 60000,
                 disableSpins: true,
                 disableWelcome: true,
-                updatesLog: true
+                updatesLog: false
             }
         )
         .then((client) => {
             this.client = client
-            this.initialize()
+            this.initialize(client)
+            this.onHandleMessages(client)
         })
         .catch((error) => {
             console.error(`Error initializing bot: ${error}`)
         });
     }
 
-    private initialize() {
-        this.client.onStateChange((state: SocketState) => {
+    private async initialize(client: Whatsapp) {
+        const hostDeviceInfo: HostDeviceInfo = await client.getHostDevice() as HostDeviceInfo
+        this.number = hostDeviceInfo.id.user
+        this.start()
+
+        client.onStateChange((state: SocketState) => {
             console.log('State changed:', state)
         });
 
-        this.client.onStreamChange((state: SocketStream) => {
+        client.onStreamChange((state: SocketStream) => {
             console.log('Stream state:', state)
         });
 
-        if (!this.client) return
+        if (!client) return
 
-        this.client.onStateChange((state: SocketState) => {
+        client.onStateChange((state: SocketState) => {
             console.log('State changed:', state)
-
-            if (state === 'CONNECTED') {
-                console.log(`Bot ${this.name} | Online ✅`)
-                this.number = this.client.getHostDevice()
-                console.log(this.number)
-                this.start()
-            }
         });
 
-        this.client.onStreamChange((state) => {
+        client.onStreamChange((state) => {
             console.log('Stream state:', state)
         });
     }
 
-    private onHandleMessages() {
-        this.client.onMessage((message: Message) => { } )
+    private onHandleMessages(client: Whatsapp) {
+        client.onMessage((message: Message) => { 
+            console.log(message)
+            client.sendText(message.chatId, "Oi!")
+        } )
     }
 
     // Configure the bot and send an initialization message

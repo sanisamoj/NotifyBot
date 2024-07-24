@@ -22,3 +22,16 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
 - Backend: **Fastify (Typescript)**.
 - Banco de dados: **Mongodb** - Para armazenamento de dados sensíveis.
 - API para controle de bot: [venom](https://github.com/orkestral/venom).
+
+## Para a instalação
+Para instalar o projeto para testes, utilizaremos o Docker.
+
+- Instale a última versão do **Docker** em sua máquina.
+
+#### Execute o comando a seguir para construir a imagem Docker.
+
+    docker build -t notify-bot .
+
+#### Execute o comando a seguir para executar a imagem criada com o Docker.
+
+    docker run -p 9091:9091 notify-bot:latest
