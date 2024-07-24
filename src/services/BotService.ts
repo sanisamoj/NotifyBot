@@ -25,6 +25,6 @@ export class BotService {
     }
 
     async sendMessage(sendMessageRequest: SendMessageRequest) {
-        
+        this.repository.sendMessage(sendMessageRequest.botId, sendMessageRequest.phone, sendMessageRequest.message)
     }
 }

@@ -11,5 +11,6 @@ export enum Errors {
     InvalidUsernameOrPassword = "Invalid username/password!",
     CouldNotDeleteItem = "Could not delete item!",
     InvalidToken = "Invalid token!",
-    JwtMustBeProvided = "jwt must be provided"
+    JwtMustBeProvided = "jwt must be provided",
+    NoDocumentsMatchedQuery = "No documents matched the query."
 }

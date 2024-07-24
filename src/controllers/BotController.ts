@@ -22,8 +22,11 @@ export class BotController {
     }
 
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
+        console.log("Fui chamado")
         const {id} = request.params as any
         const {phone, message} = request.body as any
+
+        console.log(id)
 
         const sendMessageRequest: SendMessageRequest = {
             botId: id,

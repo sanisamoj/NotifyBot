@@ -105,7 +105,15 @@ export class NotifyBot {
 
     // Send a message
     async sendMessage(sendTo: string, message: string): Promise<void> {
-        await this.client.sendText(`${sendTo}@c.us`, message)
+        console.log("Cai aqui")
+        await this.client
+        .sendText(`${sendTo}@c.us`, message)
+        .then((result) => {
+            console.log('Result: ', result); //return object success
+          })
+          .catch((erro) => {
+            console.error('Error when sending: ', erro); //return object error
+          });
     }
 
     // Create a group
