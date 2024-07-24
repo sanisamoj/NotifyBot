@@ -76,18 +76,39 @@ export class DefaultRepository extends DatabaseRepository {
         this.mongodb.delete(CollectionsInDb.Bots, { _id: new ObjectId(id) })
     }
 
-    async closeAllBots(): Promise<void> {
+    async destroyAllBots(): Promise<void> {
         DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.destroy() })
     }
 
-    sendMessage(botId: string, to: string, message: string): void {
+    async stopAllBots(): Promise<void> {
+        DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.stop() })
+    }
+
+    async restartAllBots() {
+        const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
+
+        allBotsInDb.forEach((bot => {
+            const botData: BotCreateData = {
+                id: bot._id.toString(),
+                name: bot.name,
+                description: bot.description,
+                profileImage: bot.profileImageUrl,
+                admins: bot.admins
+            }
+
+            const notifyBot: NotifyBot = new NotifyBot(botData)
+            DefaultRepository.notifyBots.push(notifyBot)
+        }))
+    }
+
+    async sendMessage(botId: string, to: string, message: string): Promise<void> {
         const notifyBot: NotifyBot = this.getNotifyBot(botId)
         notifyBot.sendMessage(to, message)
     }
 
     private getNotifyBot(botId: string): NotifyBot {
         const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
-        if(!notifyBot) { throw new Error(Errors.BotNotFound) }
+        if (!notifyBot) { throw new Error(Errors.BotNotFound) }
         return notifyBot
     }
 

@@ -42,23 +42,25 @@ export class MongodbOperations {
         return result
     }
 
-    async returnAll<DocumentType extends Document>(collectionName: CollectionsInDb) {
+    async returnAll<DocumentType extends Document>(collectionName: CollectionsInDb): Promise<WithId<DocumentType>[]> {
         const client: MongoClient = new MongoClient(this.uri)
         const db: Db = client.db(this.mongodbName)
-
-        const collection: Collection<DocumentType> = db.collection(collectionName)
-        const cursor = await collection.find()
-
-        let allDocs = []
-
-        for await (const doc of cursor) {
-            allDocs.push(doc)
+    
+        try {
+            const collection: Collection<DocumentType> = db.collection(collectionName)
+            const cursor = collection.find()
+    
+            const allDocs: WithId<DocumentType>[] = []
+            for await (const doc of cursor) {
+                allDocs.push(doc)
+            }
+    
+            return allDocs
+        } finally {
+            await client.close()
         }
-
-        await client.close()
-
-        return allDocs
     }
+    
 
     async update<DocumentType extends Document>(collectionName: string, filter: any, update: any): Promise<DocumentType> {
         const client: MongoClient = new MongoClient(this.uri)

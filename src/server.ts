@@ -1,6 +1,5 @@
 import Fastify, { FastifyInstance } from "fastify"
 import { routes } from "./routes"
-import { BotCreateData } from "./data/models/interfaces/BotCreateData"
 import { Config } from "./Config"
 
 const fastify: FastifyInstance = Fastify({
@@ -23,14 +22,7 @@ const start = async () => {
 }
 
 start()
-
-let botData: BotCreateData = {
-    id: "Medus3212sadza",
-    name: "Meduza",
-    description: "Nem tudo na vida é só 001001.",
-    profileImage: null,
-    admins: []
-}
+Config.restartAllBots()
 
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)
@@ -42,12 +34,12 @@ process.on('unhandledRejection', (error) => {
 
 process.on('SIGINT', async () => {
     try {
-        await Config.closeAllBots();
-        console.log('Todos os bots foram fechados.');
+        await Config.stopAllBots()
+        console.log('Todos os bots foram fechados.')
     } catch (error) {
-        console.error('Erro ao fechar os bots:', error);
+        console.error('Erro ao fechar os bots:', error)
     } finally {
-        process.exit();
+        process.exit()
     }
 })
 

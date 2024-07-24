@@ -103,6 +103,10 @@ export class NotifyBot {
         console.log(`Bot ${this.name} | Offline ⚠️`)
     }
 
+    async stop(): Promise<void> {
+        await this.client.close()
+    }
+
     // Send a message
     async sendMessage(sendTo: string, message: string): Promise<void> {
         console.log("Cai aqui")

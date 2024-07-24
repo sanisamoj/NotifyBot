@@ -2,7 +2,7 @@ import { DatabaseRepository } from "./data/models/interfaces/DatabaseRepository"
 import { DefaultRepository } from "./data/repository/DefaultRepository"
 
 export class Config {
-  static systemVersion: string = "0.2.1"
+  static systemVersion: string = "0.2.2"
   static SAVE_BOTS_FILE_PATH: string = "./savedBots"
 
   private static databaseRepository = new DefaultRepository()
@@ -11,7 +11,15 @@ export class Config {
     return Config.databaseRepository
   }
 
-  static async closeAllBots() {
-    Config.databaseRepository.closeAllBots()
+  static async destroyAllBots() {
+    Config.databaseRepository.destroyAllBots()
+  }
+
+  static async stopAllBots() {
+    Config.databaseRepository.stopAllBots()
+  }
+
+  static async restartAllBots() {
+    Config.databaseRepository.restartAllBots()
   }
 }
