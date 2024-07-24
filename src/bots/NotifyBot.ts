@@ -1,21 +1,21 @@
-import { create, GroupCreation, Message, SocketState, Whatsapp } from 'venom-bot'
 import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { BotCreateData } from '../data/models/interfaces/BotCreateData'
 import { AdminService } from '../services/AdminService'
 import { Config } from '../Config'
-import { SocketStream } from 'venom-bot/dist/api/model/enum'
-import { HostDeviceInfo } from '../data/models/interfaces/HostDeviceInfo'
+import { Client, GroupChat, LocalAuth, Message, MessageMedia } from 'whatsapp-web.js'
+import qrcode from 'qrcode-terminal'
+import { Errors } from '../data/models/enums/Errors'
 
 export class NotifyBot {
-    id: string;
+    id: string
     name: string;
     description: string
     number: string = ""
     profileImage: string | null = null
     qrCode: string | undefined = undefined
 
-    private client!: Whatsapp;
+    private client!: Client
     private superAdmins: string[]
 
     constructor(botData: BotCreateData) {
@@ -25,71 +25,53 @@ export class NotifyBot {
         this.profileImage = botData.profileImage
         this.superAdmins = botData.admins
 
-        create(
-            this.id,
-            (base64Qrimg, asciiQR, attempts, urlCode) => {
-                console.log('urlCode (data-ref): ', urlCode)
-                this.qrCode = urlCode
-            },
-            (statusSession, session) => {
-                console.log('Status Session: ', statusSession)
-                console.log('Session name: ', session)
-            },
-            {
-                headless: 'new',
-                logQR: true,
-                autoClose: 60000,
-                disableSpins: true,
-                disableWelcome: true,
-                updatesLog: false
-            }
-        )
-        .then((client) => {
-            this.client = client
-            this.initialize(client)
-            this.onHandleMessages(client)
-        })
-        .catch((error) => {
-            console.error(`Error initializing bot: ${error}`)
-        });
-    }
-
-    private async initialize(client: Whatsapp) {
-        const hostDeviceInfo: HostDeviceInfo = await client.getHostDevice() as HostDeviceInfo
-        this.number = hostDeviceInfo.id.user
-        this.start()
-
-        client.onStateChange((state: SocketState) => {
-            console.log('State changed:', state)
+        this.client = new Client({
+            puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+            authStrategy: new LocalAuth({
+                clientId: this.id,
+                dataPath: Config.SAVE_BOTS_FILE_PATH
+            })
         })
 
-        client.onStreamChange((state: SocketStream) => {
-            console.log('Stream state:', state)
+        this.client.on('qr', (qr: string) => {
+            qrcode.generate(qr, { small: true })
+            this.qrCode = qr
         })
-    }
 
-    private onHandleMessages(client: Whatsapp) {
-        client.onMessage((message: Message) => { 
-            client.sendText(message.chatId, "Oi!")
-        } )
+        this.client.on('ready', () => {
+            console.log(`Bot ${this.number} | Online ✅`)
+            this.number = this.client.info.wid.user
+        })
+
+        this.client.initialize().then(async () => {
+            this.start(this.client)
+            this.onHandleMessages(this.client)
+        })
     }
 
     // Configure the bot and send an initialization message
-    private async start() {
+    private async start(client: Client) {
         const adminService = new AdminService();
-        adminService.sendMessageOfInitialization(this.client, this.name)
+        adminService.sendMessageOfInitialization(client, this.name)
 
-        await this.client.setProfileName(this.name)
-        await this.client.setProfileStatus(this.description)
+        await client.setDisplayName(this.name)
+        await client.setStatus(this.description)
 
-        if (this.profileImage) {
-            await this.client.setProfilePic(this.profileImage)
+        if (this.profileImage != null) {
+            const media: MessageMedia = await MessageMedia.fromUrl(this.profileImage, {unsafeMime: true})
+            await client.setProfilePicture(media)
         }
     }
 
-    // Delete and destroy the bot
+    private onHandleMessages(client: Client) {
+        client.on('message', async (msg: Message) => {
+            client.sendMessage(msg.from, "Oi!")
+        })
+    }
+
+    // Destroy the bot and deletes cache
     async destroy(): Promise<void> {
-        await this.client.close()
+        await this.client.destroy()
         const pathSave = path.join(Config.SAVE_BOTS_FILE_PATH, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {
@@ -103,21 +85,14 @@ export class NotifyBot {
         console.log(`Bot ${this.name} | Offline ⚠️`)
     }
 
+    // Destroy the bot
     async stop(): Promise<void> {
-        await this.client.close()
+        await this.client.destroy()
     }
 
     // Send a message
     async sendMessage(sendTo: string, message: string): Promise<void> {
-        console.log("Cai aqui")
-        await this.client
-        .sendText(`${sendTo}@c.us`, message)
-        .then((result) => {
-            console.log('Result: ', result); //return object success
-          })
-          .catch((erro) => {
-            console.error('Error when sending: ', erro); //return object error
-          });
+        await this.client.sendMessage(`${sendTo}@c.us`, message)
     }
 
     // Create a group
@@ -125,73 +100,87 @@ export class NotifyBot {
         const adminsSerialized: string[] = adminsOfThisGroup.map(phone => phone + "@c.us")
         const superAdminsSerialized: string[] = this.superAdmins.map(phone => phone + "@c.us")
         const admins: string[] = [...adminsSerialized, ...superAdminsSerialized]
-        const group: GroupCreation = await this.client.createGroup(title, admins)
-        console.log(group)
 
-        await this.client.setGroupDescription(group.gid._serialized, description)
-        await this.client.promoteParticipant(group.gid._serialized, admins)
+        const group: any = await this.client.createGroup(title, admins)
+        const groupChat = await this.client.getChatById(`${group.gid._serialized}`) as GroupChat
+
+        await groupChat.setDescription(description)
+        await groupChat.setInfoAdminsOnly(true)
+        await groupChat.promoteParticipants(admins)
         
-        if (imgProfileUrl) {
-            try {
-                await this.client.setGroupImage(group.gid._serialized, imgProfileUrl)
-            } catch (error) {
-                console.error(error);
-            }
+        if(imgProfileUrl != null) {
+            new Promise(async() => {
+                try {
+                    const media: MessageMedia = await MessageMedia.fromUrl(imgProfileUrl, {unsafeMime: true})
+                    await groupChat.setPicture(media)
+                } catch (error) {
+                    console.log(error)
+                }
+            })
         }
 
-        return group.gid._serialized
+        await this.returnGroupById(group.gid.user)
+        return group.gid.user
     }
 
     // Returns the group by ID
     async returnGroupById(groupId: string): Promise<any> {
-        return await this.client.getGroupAdmins(groupId); // Fazer
+        const group = await this.client.getChatById(`${groupId}@g.us`) as GroupChat
+        return group
     }
 
     // Add a participant to the group
-    async addParticipantToGroup(groupId: string, phone: string): Promise<void> {
-        const group = await this.returnGroupById(groupId);
-        const totalParticipants: number = group.participants.length;
+    async addParticipantToGroup(groupId: string, phone: string) {
+        const group = await this.returnGroupById(groupId)
+        const totalParticipants: number = group.participants.length
 
-        if (totalParticipants < 1003) {
+        if(totalParticipants < 1003) {
             try {
-                await this.client.addParticipant(groupId, `${phone}@c.us`)
+                // Adiciona o usuário ao grupo
+                await group.addParticipants(`${phone}@c.us`)
+                return
+
             } catch (error) {
-                throw new Error("User not added");
+                // Usuário não foi adicionado ao grupo por algum motivo
+                throw new Error(Errors.UserNotAdded)
+                
             }
-        } else {
-            throw new Error("Max participants reached");
         }
+
+        // Usuário não foi adicionado pois o grupo já chegou ao número máximo de participantes
+        throw new Error(Errors.MaxParticipantsReached)
+        
     }
 
     // Remove a participant from the group
-    async removeParticipantFromGroup(groupId: string, phone: string): Promise<void> {
+    async removeParticipantFromTheGroup(groupId: string, phone: string)  {
+        const group = await this.returnGroupById(groupId)
         try {
-            await this.client.removeParticipant(groupId, `${phone}@c.us`)
+            if(this.number != phone) { await group.removeParticipants([`${phone}@c.us`]) }
         } catch (error) {
-            throw new Error("User not removed")
+            throw new Error(Errors.UserNotRemoved)
         }
     }
 
     // Delete the group
-    async deleteGroup(groupId: string): Promise<void> {
-        const group = await this.returnGroupById(groupId);
-        for (let participant of group.participants) {
+    async deleteGroup(groupId: string) {
+        const group = await this.returnGroupById(groupId)
+        for(let participant of group.participants) {
             try {
-                await this.client.removeParticipant(groupId, participant.id)
+                await group.removeParticipants([participant.id._serialized])
             } catch (error) {
-                console.error(error)
+                console.log(error)
             }
         }
 
-        try {
-            await this.client.leaveGroup(groupId)
-        } catch (error) {
-            throw new Error("Group not deleted")
-        }
+        const groupDeleted: boolean = await group.delete()
+        if(groupDeleted === false) { throw new Error(Errors.NoGroupsWereDeletes) }
+        return
     }
 
     // Send a message to the group
-    async sendMessageToGroup(groupId: string, message: string): Promise<void> {
-        await this.client.sendText(groupId, message)
+    async sendMessageToTheGroup(groupId: string, message: string) {
+        const group = await this.returnGroupById(groupId)
+        await group.sendMessage(message)
     }
 }

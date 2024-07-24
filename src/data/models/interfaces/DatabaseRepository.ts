@@ -1,6 +1,7 @@
-import { NotifyBot } from "../../../bots/NotifyBot"
 import { BotInfo } from "./BotInfo"
 import { CreateBotRequest } from "./CreateBotRequest"
+import { CreateGroupInfo } from "./CreateGroupInfo"
+import { GroupInfo } from "./GroupInfo"
 
 export abstract class DatabaseRepository {
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
@@ -10,4 +11,5 @@ export abstract class DatabaseRepository {
     abstract stopAllBots(): void
     abstract restartAllBots(): void
     abstract sendMessage(botId: string, to: string, message: string): void
+    abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>
 }

@@ -1,7 +1,9 @@
 import { Config } from "../Config"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
+import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
+import { GroupInfo } from "../data/models/interfaces/GroupInfo"
 import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest"
 
 export class BotService {
@@ -26,5 +28,10 @@ export class BotService {
 
     async sendMessage(sendMessageRequest: SendMessageRequest) {
         this.repository.sendMessage(sendMessageRequest.botId, sendMessageRequest.phone, sendMessageRequest.message)
+    }
+
+    async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
+        const groupInfo: GroupInfo = await this.repository.createGroup(createGroupInfo)
+        return groupInfo
     }
 }

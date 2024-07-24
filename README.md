@@ -1,5 +1,5 @@
 # Notify-Bot
-Este é um gerenciador de bots para o Whatsapp, que utiliza a API do [venom](https://github.com/orkestral/venom).
+Este é um gerenciador de bots para o Whatsapp, que utiliza a API do [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js).
 
 Tem como objetivo de gerenciar bots que servem para notificar usuários, criar grupos para aplicações que têm uma base de usuários e pode funcionar como um microservice.
 
@@ -21,7 +21,7 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
 
 - Backend: **Fastify (Typescript)**.
 - Banco de dados: **Mongodb** - Para armazenamento de dados sensíveis.
-- API para controle de bot: [venom](https://github.com/orkestral/venom).
+- API para controle de bot: [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js).
 
 ## Para a instalação
 Para instalar o projeto para testes, utilizaremos o Docker.

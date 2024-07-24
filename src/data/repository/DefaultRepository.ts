@@ -1,5 +1,4 @@
 import { ObjectId } from "mongodb"
-import { NotifyBot } from "../../bots/NotifyBot"
 import { BotInfo } from "../models/interfaces/BotInfo"
 import { CreateBotRequest } from "../models/interfaces/CreateBotRequest"
 import { DatabaseRepository } from "../models/interfaces/DatabaseRepository"
@@ -8,6 +7,11 @@ import { MongodbOperations } from "../../database/Mongodb"
 import { CollectionsInDb } from "../../database/CollectionsInDb"
 import { BotCreateData } from "../models/interfaces/BotCreateData"
 import { Errors } from "../models/enums/Errors"
+import { CreateGroupInfo } from "../models/interfaces/CreateGroupInfo"
+import { GroupInfo } from "../models/interfaces/GroupInfo"
+import { Group } from "../models/interfaces/Group"
+import { Participant } from "../models/interfaces/Participant"
+import { NotifyBot } from "../../bots/NotifyBot"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -110,6 +114,55 @@ export class DefaultRepository extends DatabaseRepository {
         const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
         if (!notifyBot) { throw new Error(Errors.BotNotFound) }
         return notifyBot
+    }
+
+    async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
+        const notifyBot: NotifyBot = this.getNotifyBot(createGroupInfo.botId)
+        const groupId: string = await notifyBot.createGroup(
+            createGroupInfo.title,
+            createGroupInfo.description,
+            createGroupInfo.imgProfileUrl,
+            createGroupInfo.superAdmins
+        )
+
+        const participants: Participant[] = createGroupInfo.superAdmins.map(
+            element => {
+                const participant: Participant = {
+                    phone: element,
+                    isAdmin: true
+                }
+                return participant
+            }
+        )
+
+        const group: Group = {
+            _id: new ObjectId(),
+            groupId: groupId,
+            botId: createGroupInfo.botId,
+            title: createGroupInfo.title,
+            description: createGroupInfo.description,
+            imgProfileUrl: createGroupInfo.imgProfileUrl,
+            superAdmins: createGroupInfo.superAdmins,
+            participants: participants,
+            createdAt: new Date().toDateString()
+        }
+
+        this.mongodb.register<Group>(CollectionsInDb.Groups, group)
+        return this.groupInfoFactory(group)
+    }
+
+    private groupInfoFactory(group: Group): GroupInfo {
+        const groupInfo: GroupInfo = {
+            id: group.groupId,
+            botId: group.botId,
+            title: group.title,
+            description: group.description,
+            imgProfileUrl: group.imgProfileUrl,
+            superAdmins: group.superAdmins,
+            participants: group.participants,
+            createdAt: group.createdAt
+        }
+        return groupInfo
     }
 
 }

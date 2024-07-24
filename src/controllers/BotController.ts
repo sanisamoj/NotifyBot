@@ -7,6 +7,7 @@ import { DataForActionWithParticipant } from "../data/models/interfaces/DataForA
 import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
 import { BotService } from "../services/BotService"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
+import { GroupInfo } from "../data/models/interfaces/GroupInfo"
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
@@ -22,11 +23,8 @@ export class BotController {
     }
 
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
-        console.log("Fui chamado")
         const {id} = request.params as any
         const {phone, message} = request.body as any
-
-        console.log(id)
 
         const sendMessageRequest: SendMessageRequest = {
             botId: id,
@@ -55,6 +53,9 @@ export class BotController {
             imgProfileUrl: createGroupRequest.imgProfileUrl,
             superAdmins: createGroupRequest.superAdmins
         }
+
+        const groupInfo: GroupInfo = await new BotService().createGroup(createGroupInfo)
+        return reply.status(201).send(groupInfo)
     }
 
     async returnGroupById(request: FastifyRequest, reply: FastifyReply) {

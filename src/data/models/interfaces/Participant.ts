@@ -1,4 +1,4 @@
-export interface ParticipantResponse {
+export interface Participant {
     phone: string,
     isAdmin: boolean
 }

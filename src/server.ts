@@ -11,7 +11,6 @@ fastify.register(routes)
 
 const start = async () => {
     try {
-
         await fastify.listen({ port: 9091, host: "0.0.0.0" })
         console.log('Servidor Principal | Online ✅')
 
