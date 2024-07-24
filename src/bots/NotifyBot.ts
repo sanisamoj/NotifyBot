@@ -11,7 +11,7 @@ export class NotifyBot {
     id: string;
     name: string;
     description: string
-    number: any = ""
+    number: string = ""
     profileImage: string | null = null
     qrCode: string | undefined = undefined
 
@@ -61,26 +61,15 @@ export class NotifyBot {
 
         client.onStateChange((state: SocketState) => {
             console.log('State changed:', state)
-        });
+        })
 
         client.onStreamChange((state: SocketStream) => {
             console.log('Stream state:', state)
-        });
-
-        if (!client) return
-
-        client.onStateChange((state: SocketState) => {
-            console.log('State changed:', state)
-        });
-
-        client.onStreamChange((state) => {
-            console.log('Stream state:', state)
-        });
+        })
     }
 
     private onHandleMessages(client: Whatsapp) {
         client.onMessage((message: Message) => { 
-            console.log(message)
             client.sendText(message.chatId, "Oi!")
         } )
     }

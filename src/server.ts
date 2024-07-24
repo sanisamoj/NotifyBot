@@ -29,9 +29,9 @@ const start = async () => {
 start()
 
 let botData: BotCreateData = {
-    id: "string",
-    name: "string",
-    description: "string",
+    id: "Medus3212sadza",
+    name: "Meduza",
+    description: "Nem tudo na vida é só 001001.",
     profileImage: null,
     admins: []
 }

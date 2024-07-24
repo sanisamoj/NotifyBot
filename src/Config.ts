@@ -1,26 +1,13 @@
-import { NotifyBot } from "./bots/NotifyBot"
+import { DatabaseRepository } from "./data/models/interfaces/DatabaseRepository"
+import { DefaultRepository } from "./data/repository/DefaultRepository"
 
 export class Config {
-    static systemVersion: string = "0.2.0"
-    static SAVE_BOTS_FILE_PATH: string = "./savedBots"
-    private static AllNotifyBots: NotifyBot[] = []
-    
-    static getAllNotifyBots() {
-        return this.getAllNotifyBots
-    }
+  static systemVersion: string = "0.2.0"
+  static SAVE_BOTS_FILE_PATH: string = "./savedBots"
 
-    static addNotifyBot(notifyBot: NotifyBot) {
-        const index = this.AllNotifyBots.findIndex(bot => bot.name === notifyBot.name)
+  private static databaseRepository = new DefaultRepository()
 
-        if (index === -1) {
-          this.AllNotifyBots.push(notifyBot)
-        } else {
-          console.log(`Bot ${notifyBot.name} já existe na lista.`)
-        }
-    }
-
-    static getNotifyBotById(id: string): NotifyBot | null {
-        const bot = this.AllNotifyBots.find(element => element.id === id)
-        return bot ? bot : null
-    }
+  static getDatabaseRepository(): DatabaseRepository {
+    return Config.databaseRepository
+  }
 }

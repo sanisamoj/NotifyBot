@@ -8,18 +8,18 @@ export class AdminService {
         this.adminsInEnv = process.env.SUPER_USER as string;
     }
 
-    // Retorna todos os admins em array do bot
+    // Returns all admins in the bot array
     returnAllAdmins(): string[] {
         this.allAdmins = this.adminsInEnv.split(", ");
         return this.allAdmins;
     }
 
-    // Envia mensagem de inicialização a todos os admins
+    // Send startup message to all admins
     async sendMessageOfInitialization(client: Whatsapp, botName: string): Promise<void> {
         const allAdmins = this.returnAllAdmins();
 
         for (const admin of allAdmins) {
-            // Envia mensagem ao superusuário de inicialização
+            // Send message to startup superuser
             try {
                 await client.sendText(`${admin}@c.us`, `*Bot ${botName.toUpperCase()} Initialized*`);
             } catch (error) {

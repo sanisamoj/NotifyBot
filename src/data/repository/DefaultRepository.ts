@@ -1,9 +1,9 @@
 import { NotifyBot } from "../../bots/NotifyBot";
 import { BotInfo } from "../models/interfaces/BotInfo";
 import { CreateBotRequest } from "../models/interfaces/CreateBotRequest";
-import { DatabaseRespository } from "../models/interfaces/DatabaseRepository";
+import { DatabaseRepository } from "../models/interfaces/DatabaseRepository";
 
-class DefaultRepository extends DatabaseRespository {
+export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
 
     registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo> {
