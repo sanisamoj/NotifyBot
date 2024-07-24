@@ -27,6 +27,7 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
 Para instalar o projeto para testes, utilizaremos o Docker.
 
 - Instale a última versão do **Docker** em sua máquina.
+- Instale o mongodb (Verifique na página oficial, ou monte uma imagem com o Docker).
 
 #### Execute o comando a seguir para construir a imagem Docker.
 
