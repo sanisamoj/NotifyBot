@@ -1,5 +1,5 @@
 import { ErrorResponse } from "../data/models/interfaces/ErrorResponse"
-import {Errors} from "./Errors"
+import {Errors} from "../data/models/enums/Errors"
 
 export function errorResponse(error: string): ErrorResponse {
     switch(error) {

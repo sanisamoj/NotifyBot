@@ -10,4 +10,8 @@ export class Config {
   static getDatabaseRepository(): DatabaseRepository {
     return Config.databaseRepository
   }
+
+  static async closeAllBots() {
+    Config.databaseRepository.closeAllBots()
+  }
 }

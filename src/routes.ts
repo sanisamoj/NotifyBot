@@ -1,7 +1,7 @@
-import {RouteShorthandOptions} from "fastify";
-import {TokenValidator} from "./middleware/TokenValidator";
-import { ErrorsController } from "./controllers/ErrorsController";
-import { BotController } from "./controllers/BotController";
+import {RouteShorthandOptions} from "fastify"
+import {TokenValidator} from "./middleware/TokenValidator"
+import { ErrorsController } from "./controllers/ErrorsController"
+import { BotController } from "./controllers/BotController"
 
 export async function routes(fastify: any, options: RouteShorthandOptions): Promise<void> {
     const authentication: TokenValidator = new TokenValidator()
@@ -10,15 +10,15 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.setErrorHandler(new ErrorsController().globalFastifyError)
 
     // Rota responsável por criar um bot
-    fastify.post("/bot", { preHandler: [authentication.isAuthenticated] }, new BotController().createBot)
+    fastify.post("/bot", new BotController().createBot)
     // Rota responsável por deletar um bot
-    fastify.delete("/bot/:id", { preHandler: [authentication.isAuthenticated] }, new BotController().deleteBot)
+    fastify.delete("/bot/:id", new BotController().deleteBot)
     // Rota responsável por enviar uma mensagem com o bot
-    fastify.post("/bot/:id/message", { preHandler: [authentication.isAuthenticated] }, new BotController().sendMessage)
+    fastify.post("/bot/:id/message", new BotController().sendMessage)
     // Rota responsável por enviar uma mensagem para um grupo
     fastify.post("/bot/:id/group/message", { preHandler: [authentication.isAuthenticated] }, new BotController().sendMessageToGroup)
     // Rota responsável por retornar um bot
-    fastify.get("/bot/:id", { preHandler: [authentication.isAuthenticated] }, new BotController().returnBotById)
+    fastify.get("/bot/:id", new BotController().returnBotById)
     // Rota responsável por criar um grupo
     fastify.post("/bot/:id/group", { preHandler: [authentication.isAuthenticated] }, new BotController().createGroup)
     // Rota responsável retornar um grupo pelo ID

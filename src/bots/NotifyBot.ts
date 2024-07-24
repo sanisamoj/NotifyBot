@@ -89,10 +89,7 @@ export class NotifyBot {
 
     // Delete and destroy the bot
     async destroy(): Promise<void> {
-        await this.client.logout();
-        await this.client.close();
-
-        // Deleta o arquivo de cache do bot
+        await this.client.close()
         const pathSave = path.join(Config.SAVE_BOTS_FILE_PATH, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {

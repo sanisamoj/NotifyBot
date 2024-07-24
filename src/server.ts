@@ -1,10 +1,7 @@
 import Fastify, { FastifyInstance } from "fastify"
-import * as dotenv from 'dotenv'
 import { routes } from "./routes"
 import { BotCreateData } from "./data/models/interfaces/BotCreateData"
-import { NotifyBot } from "./bots/NotifyBot"
-
-dotenv.config()
+import { Config } from "./Config"
 
 const fastify: FastifyInstance = Fastify({
     logger: true,
@@ -13,7 +10,6 @@ const fastify: FastifyInstance = Fastify({
 
 fastify.register(routes)
 
-// Inicia o servidor
 const start = async () => {
     try {
 
@@ -36,9 +32,6 @@ let botData: BotCreateData = {
     admins: []
 }
 
-new NotifyBot(botData)
-
-// Trata os erros que não foram capturados internamente
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)
 })
@@ -47,9 +40,15 @@ process.on('unhandledRejection', (error) => {
     console.log(`unhandledRejection signal received. \n${error}`)
 })
 
-process.on('SIGINT', () => {
-    console.log('Encerrando aplicação!')
-    process.exit()
+process.on('SIGINT', async () => {
+    try {
+        await Config.closeAllBots();
+        console.log('Todos os bots foram fechados.');
+    } catch (error) {
+        console.error('Erro ao fechar os bots:', error);
+    } finally {
+        process.exit();
+    }
 })
 
 process.on('SIGTERM', () => {

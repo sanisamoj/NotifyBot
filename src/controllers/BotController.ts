@@ -5,16 +5,20 @@ import { CreateGroupRequest } from "../data/models/interfaces/CreateGroupRequest
 import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DataForActionWithParticipant } from "../data/models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
+import { BotService } from "../services/BotService"
+import { BotInfo } from "../data/models/interfaces/BotInfo"
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
         const createBotRequest = request.body as CreateBotRequest
-        
+        const botInfo: BotInfo = await new BotService().createBot(createBotRequest)
+        return reply.status(201).send(botInfo)
     }
 
     async deleteBot(request: FastifyRequest, reply: FastifyReply) {
         const {id} = request.params as any
-
+        await new BotService().deleteBotById(id)
+        return reply.status(200).send()
     }
 
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
@@ -26,12 +30,15 @@ export class BotController {
             phone: phone,
             message: message
         }
-
+        
+        new BotService().sendMessage(sendMessageRequest)
+        return reply.status(200).send()
     }
 
     async returnBotById(request: FastifyRequest, reply: FastifyReply) {
         const {id} = request.params as any
-
+        const botInfo: BotInfo = await new BotService().getBotById(id)
+        return reply.send(botInfo)
     }
 
     async createGroup(request: FastifyRequest, reply: FastifyReply) {

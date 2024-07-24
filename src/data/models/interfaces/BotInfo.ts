@@ -4,5 +4,6 @@ export interface BotInfo {
     description: string
     number: string
     profileImageUrl: string
+    qrCode: string
     createdAt: string
 }

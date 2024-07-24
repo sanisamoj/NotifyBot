@@ -7,6 +7,7 @@ export enum Errors {
     UnableToDeleteBot = "Unable to delete bot!",
     InternalServerError = "Internal server error!",
     UserNotFound = "User not found!",
+    BotNotFound = "Bot not found!",
     InvalidUsernameOrPassword = "Invalid username/password!",
     CouldNotDeleteItem = "Could not delete item!",
     InvalidToken = "Invalid token!",

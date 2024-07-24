@@ -1,4 +1,3 @@
-# Use a imagem base do Node.js
 FROM node:18
 
 # Instala as dependências necessárias para o Puppeteer e Chromium
@@ -25,7 +24,6 @@ RUN apt-get update && apt-get install -y \
   --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
 
-# Define o diretório de trabalho dentro do container
 WORKDIR /usr/src/app
 
 # Copia o package.json e package-lock.json para o diretório de trabalho
@@ -37,8 +35,5 @@ RUN npm install
 # Copia todos os arquivos e diretórios restantes para o diretório de trabalho
 COPY . .
 
-# Expõe a porta que o aplicativo usará (ajuste conforme necessário)
 EXPOSE 3000
-
-# Comando para iniciar o aplicativo
 CMD ["npm", "run", "dev"]

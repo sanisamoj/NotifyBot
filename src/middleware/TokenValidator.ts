@@ -1,5 +1,5 @@
 import {FastifyReply, FastifyRequest} from "fastify";
-import {Errors} from "../error/Errors";
+import {Errors} from "../data/models/enums/Errors";
 import jwt from "jsonwebtoken"
 
 import {errorResponse} from "../error/errorResponse";
