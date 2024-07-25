@@ -1,13 +1,9 @@
 import {RouteShorthandOptions} from "fastify"
 import {TokenValidator} from "./middleware/TokenValidator"
-import { ErrorsController } from "./controllers/ErrorsController"
 import { BotController } from "./controllers/BotController"
 
 export async function routes(fastify: any, options: RouteShorthandOptions): Promise<void> {
     const authentication: TokenValidator = new TokenValidator()
-
-    // Erro global não tratado
-    fastify.setErrorHandler(new ErrorsController().globalFastifyError)
 
     // Rota responsável por criar um bot
     fastify.post("/bot", new BotController().createBot)

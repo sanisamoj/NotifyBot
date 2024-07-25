@@ -43,7 +43,7 @@ export class BotService {
     }
 
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
-        const groups: GroupInfo[] = await this.repository.getAllGroupsFromBot(botId)
+        const groups: GroupInfo[] = await this.repository.getAllGroupsFromTheBot(botId)
         return groups
     }
 

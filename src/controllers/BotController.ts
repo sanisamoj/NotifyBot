@@ -81,7 +81,7 @@ export class BotController {
         }
         await new BotService().addParticipantToTheGroup(dataForActionWithParticipant)
 
-        return reply.status(200)
+        return reply.status(200).send()
     }
 
     async removeParticipantToGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -93,13 +93,13 @@ export class BotController {
         }
         await new BotService().removeParticipantFromTheGroup(dataForActionWithParticipant)
 
-        return reply.status(200)
+        return reply.status(200).send()
     }
 
     async groupDelete(request: FastifyRequest, reply: FastifyReply) {
         const {id, groupId} = request.params as any
         await new BotService().deleteGroup(id, groupId)
-        return reply.status(200)
+        reply.status(200).send()
     }
 
     async sendMessageToGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -112,6 +112,6 @@ export class BotController {
         }
         await new BotService().sendMessageToGroup(sendMessageInfo)
 
-        return reply.status(200)
+        return reply.status(200).send()
     }
 }

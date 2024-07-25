@@ -14,6 +14,7 @@ import { Participant } from "../models/interfaces/Participant"
 import { NotifyBot } from "../../bots/NotifyBot"
 import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
+import { GroupChat } from "whatsapp-web.js"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -162,24 +163,60 @@ export class DefaultRepository extends DatabaseRepository {
             title: group.title,
             description: group.description,
             imgProfileUrl: group.imgProfileUrl,
-            superAdmins: group.superAdmins,
             participants: group.participants,
             createdAt: group.createdAt
         }
-        
+
         return groupInfo
     }
 
     async getGroupById(botId: string, groupId: string): Promise<GroupInfo> {
-        throw new Error("Method not implemented.")
+        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const groupChat: GroupChat = await norifyBot.returnGroupById(groupId)
+        const groupInfo: GroupInfo = await this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)
+        return groupInfo
     }
 
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
-        throw new Error("Method not implemented.")
+        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Bots, { botId: botId })
+        const groupInfoList: GroupInfo[] = await Promise.all(groups.map(async (group) => {
+            const groupChat: GroupChat = await norifyBot.returnGroupById(group.groupId)
+            return this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)
+        }))
+
+        return groupInfoList
     }
-    
+
+    private async groupInfoFactoryWithParticipantsUpdated(botId: string, groupChat: GroupChat): Promise<GroupInfo> {
+        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const group: GroupChat = await norifyBot.returnGroupById(groupChat.id.user)
+
+        let participants: Participant[] = []
+        for (const participant of group.participants) {
+            let participantResponse: Participant = {
+                phone: participant.id.user,
+                isAdmin: participant.isAdmin
+            }
+            participants.push(participantResponse)
+        }
+
+        const groupInfo: GroupInfo = {
+            id: group.id.user,
+            botId: botId,
+            title: group.name,
+            description: group.description,
+            imgProfileUrl: norifyBot.profileImage,
+            participants: participants,
+            createdAt: group.createdAt.toDateString()
+        }
+
+        return groupInfo
+    }
+
     async deleteGroupById(botId: string, groupId: string): Promise<void> {
-        throw new Error("Method not implemented.")
+        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        norifyBot.deleteGroup(groupId)
     }
 
     async addParticipantToTheGroup(info: DataForActionWithParticipant): Promise<void> {

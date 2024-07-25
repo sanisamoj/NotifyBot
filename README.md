@@ -36,4 +36,8 @@ Para instalar o projeto para testes, utilizaremos o Docker.
 #### Execute o comando a seguir para executar a imagem criada com o Docker.
 
     docker run --name notify-bot -p 9091:9091 notify-bot:latest
- 
+
+## Endpoints disponíveis
+
+No momento apenas alguns endpoints estão disponíveis, e estão hospedados na página de endpoints do Postman.
+https://documenter.getpostman.com/view/29175154/2sA3kYhzYP

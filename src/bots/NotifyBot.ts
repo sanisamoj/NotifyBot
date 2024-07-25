@@ -68,7 +68,7 @@ export class NotifyBot {
 
     private onHandleMessages(client: Client) {
         client.on('message', async (msg: Message) => {
-            client.sendMessage(msg.from, "Oi!")
+            
         })
     }
 
@@ -127,7 +127,7 @@ export class NotifyBot {
     }
 
     // Returns the group by ID
-    async returnGroupById(groupId: string): Promise<any> {
+    async returnGroupById(groupId: string): Promise<GroupChat> {
         const group = await this.client.getChatById(`${groupId}@g.us`) as GroupChat
         return group
     }
