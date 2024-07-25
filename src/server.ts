@@ -21,7 +21,7 @@ const start = async () => {
 }
 
 start()
-Config.restartAllBots()
+//Config.restartAllBots()
 
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)

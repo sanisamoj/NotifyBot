@@ -7,5 +7,6 @@ export interface BotMongodb {
     number: string
     profileImageUrl: string
     admins: string[]
+    groupsId: string[]
     createdAt: string
 }

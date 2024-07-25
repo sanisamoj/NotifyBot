@@ -12,6 +12,8 @@ import { GroupInfo } from "../models/interfaces/GroupInfo"
 import { Group } from "../models/interfaces/Group"
 import { Participant } from "../models/interfaces/Participant"
 import { NotifyBot } from "../../bots/NotifyBot"
+import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
+import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -26,10 +28,11 @@ export class DefaultRepository extends DatabaseRepository {
             number: "",
             profileImageUrl: createBotRequest.profileImage ?? "",
             admins: createBotRequest.admins,
+            groupsId: [],
             createdAt: new Date().toDateString()
         }
 
-        this.mongodb.register<BotMongodb>(CollectionsInDb.Bots, botMongodb)
+        await this.mongodb.register<BotMongodb>(CollectionsInDb.Bots, botMongodb)
 
         let botData: BotCreateData = {
             id: botId.toString(),
@@ -52,7 +55,7 @@ export class DefaultRepository extends DatabaseRepository {
         return this.botInfoFactory(botMongodb)
     }
 
-    private botInfoFactory(botMongodb: BotMongodb): BotInfo {
+    private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
         const notify: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
         let qrCode: string = notify?.qrCode ?? "undefined"
@@ -64,6 +67,7 @@ export class DefaultRepository extends DatabaseRepository {
             number: botMongodb.number,
             profileImageUrl: botMongodb.profileImageUrl,
             qrCode: qrCode,
+            groupsId: botMongodb.groupsId,
             createdAt: botMongodb.createdAt
         }
 
@@ -88,7 +92,7 @@ export class DefaultRepository extends DatabaseRepository {
         DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.stop() })
     }
 
-    async restartAllBots() {
+    async restartAllBots(): Promise<void> {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach((bot => {
@@ -162,7 +166,35 @@ export class DefaultRepository extends DatabaseRepository {
             participants: group.participants,
             createdAt: group.createdAt
         }
+        
         return groupInfo
+    }
+
+    async getGroupById(botId: string, groupId: string): Promise<GroupInfo> {
+        throw new Error("Method not implemented.")
+    }
+
+    async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
+        throw new Error("Method not implemented.")
+    }
+    
+    async deleteGroupById(botId: string, groupId: string): Promise<void> {
+        throw new Error("Method not implemented.")
+    }
+
+    async addParticipantToTheGroup(info: DataForActionWithParticipant): Promise<void> {
+        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        notifyBot.addParticipantToGroup(info.groupId, info.phone)
+    }
+
+    async removeParticipantFromTheGroup(info: DataForActionWithParticipant): Promise<void> {
+        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        notifyBot.removeParticipantFromTheGroup(info.groupId, info.phone)
+    }
+
+    async sendMessageTotheGroup(info: SendMessageInfo): Promise<void> {
+        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        notifyBot.sendMessageToTheGroup(info.to, info.message)
     }
 
 }

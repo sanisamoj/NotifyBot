@@ -60,7 +60,16 @@ export class BotController {
 
     async returnGroupById(request: FastifyRequest, reply: FastifyReply) {
         const {id, groupId} = request.params as any
+        const groupInfo: GroupInfo = await new BotService().getGroupById(id, groupId)
 
+        return reply.status(200).send(groupInfo)
+    }
+
+    async returnGroupsFromTheBot(request: FastifyRequest, reply: FastifyReply) {
+        const {id} = request.params as any
+        const groupsInfo: GroupInfo[] = await new BotService().getAllGroupsFromTheBot(id)
+
+        return reply.status(200).send(groupsInfo)
     }
 
     async addParticipantToGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -70,6 +79,9 @@ export class BotController {
             groupId: groupId,
             phone: phone
         }
+        await new BotService().addParticipantToTheGroup(dataForActionWithParticipant)
+
+        return reply.status(200)
     }
 
     async removeParticipantToGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -79,11 +91,15 @@ export class BotController {
             groupId: groupId,
             phone: phone
         }
+        await new BotService().removeParticipantFromTheGroup(dataForActionWithParticipant)
 
+        return reply.status(200)
     }
 
     async groupDelete(request: FastifyRequest, reply: FastifyReply) {
         const {id, groupId} = request.params as any
+        await new BotService().deleteGroup(id, groupId)
+        return reply.status(200)
     }
 
     async sendMessageToGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -94,6 +110,8 @@ export class BotController {
             to: groupId,
             message: message
         }
+        await new BotService().sendMessageToGroup(sendMessageInfo)
 
+        return reply.status(200)
     }
 }

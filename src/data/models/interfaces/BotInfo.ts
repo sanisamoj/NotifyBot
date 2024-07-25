@@ -5,5 +5,6 @@ export interface BotInfo {
     number: string
     profileImageUrl: string
     qrCode: string
+    groupsId: string[]
     createdAt: string
 }

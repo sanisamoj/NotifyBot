@@ -1,7 +1,6 @@
 import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { BotCreateData } from '../data/models/interfaces/BotCreateData'
-import { AdminService } from '../services/AdminService'
 import { Config } from '../Config'
 import { Client, GroupChat, LocalAuth, Message, MessageMedia } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
@@ -41,6 +40,7 @@ export class NotifyBot {
         this.client.on('ready', () => {
             console.log(`Bot ${this.number} | Online ✅`)
             this.number = this.client.info.wid.user
+            this.sendMessageOfInitialization(this.client, this.name)
         })
 
         this.client.initialize().then(async () => {
@@ -51,9 +51,6 @@ export class NotifyBot {
 
     // Configure the bot and send an initialization message
     private async start(client: Client) {
-        const adminService = new AdminService();
-        adminService.sendMessageOfInitialization(client, this.name)
-
         await client.setDisplayName(this.name)
         await client.setStatus(this.description)
 
@@ -61,6 +58,12 @@ export class NotifyBot {
             const media: MessageMedia = await MessageMedia.fromUrl(this.profileImage, {unsafeMime: true})
             await client.setProfilePicture(media)
         }
+    }
+
+    private async sendMessageOfInitialization(client: Client, botName: string) {
+        this.superAdmins.forEach(async element => {
+            await client.sendMessage(`${element}@c.us`, `*Bot ${botName.toUpperCase()} Initialized*`)
+        })
     }
 
     private onHandleMessages(client: Client) {
@@ -136,18 +139,15 @@ export class NotifyBot {
 
         if(totalParticipants < 1003) {
             try {
-                // Adiciona o usuário ao grupo
                 await group.addParticipants(`${phone}@c.us`)
                 return
 
             } catch (error) {
-                // Usuário não foi adicionado ao grupo por algum motivo
                 throw new Error(Errors.UserNotAdded)
                 
             }
         }
-
-        // Usuário não foi adicionado pois o grupo já chegou ao número máximo de participantes
+        
         throw new Error(Errors.MaxParticipantsReached)
         
     }
