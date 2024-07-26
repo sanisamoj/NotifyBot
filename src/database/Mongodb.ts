@@ -80,7 +80,6 @@ export class MongodbOperations {
         }
     }
     
-
     async update<DocumentType extends Document>(collectionName: string, filter: any, update: any): Promise<DocumentType> {
         const client: MongoClient = new MongoClient(this.uri)
         const db: Db = client.db(this.mongodbName)

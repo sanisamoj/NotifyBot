@@ -1,3 +1,5 @@
+import { NotifyBotConfig } from "./NotifyBotConfig"
+
 export interface BotInfo {
     id: string
     name: string
@@ -6,5 +8,6 @@ export interface BotInfo {
     profileImageUrl: string
     qrCode: string
     groupsId: string[]
+    config: NotifyBotConfig | null
     createdAt: string
 }

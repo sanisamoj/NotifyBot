@@ -1,4 +1,4 @@
 export interface NotifyBotConfig {
-    automaticMessage: Boolean | null
-    message: string | null
+    automaticMessagePermission: boolean | null
+    automaticMessage: string | null
 }

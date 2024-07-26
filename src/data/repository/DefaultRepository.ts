@@ -15,6 +15,7 @@ import { NotifyBot } from "../../bots/NotifyBot"
 import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 import { GroupChat } from "whatsapp-web.js"
+import { NotifyBotConfig } from "../models/interfaces/NotifyBotConfig"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -30,6 +31,7 @@ export class DefaultRepository extends DatabaseRepository {
             profileImageUrl: createBotRequest.profileImage ?? "",
             admins: createBotRequest.admins,
             groupsId: [],
+            config: createBotRequest.config,
             createdAt: new Date().toDateString()
         }
 
@@ -40,7 +42,8 @@ export class DefaultRepository extends DatabaseRepository {
             name: createBotRequest.name,
             description: createBotRequest.description,
             profileImage: createBotRequest.profileImage,
-            admins: createBotRequest.admins
+            admins: createBotRequest.admins,
+            config: createBotRequest.config
         }
 
         const notifyBot: NotifyBot = new NotifyBot(botData)
@@ -69,6 +72,7 @@ export class DefaultRepository extends DatabaseRepository {
             profileImageUrl: botMongodb.profileImageUrl,
             qrCode: qrCode,
             groupsId: botMongodb.groupsId,
+            config: botMongodb.config,
             createdAt: botMongodb.createdAt
         }
 
@@ -102,12 +106,17 @@ export class DefaultRepository extends DatabaseRepository {
                 name: bot.name,
                 description: bot.description,
                 profileImage: bot.profileImageUrl,
-                admins: bot.admins
+                admins: bot.admins,
+                config: bot.config
             }
 
             const notifyBot: NotifyBot = new NotifyBot(botData)
             DefaultRepository.notifyBots.push(notifyBot)
         }))
+    }
+
+    async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) }, { config: config})
     }
 
     async sendMessage(botId: string, to: string, message: string): Promise<void> {

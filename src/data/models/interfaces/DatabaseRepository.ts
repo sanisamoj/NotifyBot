@@ -1,8 +1,10 @@
+import { NotifyBot } from "../../../bots/NotifyBot"
 import { BotInfo } from "./BotInfo"
 import { CreateBotRequest } from "./CreateBotRequest"
 import { CreateGroupInfo } from "./CreateGroupInfo"
 import { DataForActionWithParticipant } from "./DataForActionWithParticipant"
 import { GroupInfo } from "./GroupInfo"
+import { NotifyBotConfig } from "./NotifyBotConfig"
 import { SendMessageInfo } from "./SendMessageInfo"
 
 export abstract class DatabaseRepository {
@@ -12,6 +14,7 @@ export abstract class DatabaseRepository {
     abstract destroyAllBots(): void
     abstract stopAllBots(): void
     abstract restartAllBots(): void
+    abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): void
     abstract sendMessage(botId: string, to: string, message: string): void
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>
     abstract getGroupById(botId: string, groupId: string): Promise<GroupInfo>

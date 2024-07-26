@@ -5,6 +5,8 @@ import { Config } from '../Config'
 import { Client, GroupChat, LocalAuth, Message, MessageMedia } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../data/models/enums/Errors'
+import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
+import { NotifyBotService } from './NotifyBotService'
 
 export class NotifyBot {
     id: string
@@ -13,6 +15,7 @@ export class NotifyBot {
     number: string = ""
     profileImage: string | null = null
     qrCode: string | undefined = undefined
+    config: NotifyBotConfig | null = null
 
     private client!: Client
     private superAdmins: string[]
@@ -23,6 +26,7 @@ export class NotifyBot {
         this.description = botData.description
         this.profileImage = botData.profileImage
         this.superAdmins = botData.admins
+        this.config = botData.config
 
         this.client = new Client({
             puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] },
@@ -47,6 +51,12 @@ export class NotifyBot {
             this.start(this.client)
             this.onHandleMessages(this.client)
         })
+
+        this.client.on('disconnected', (reason) => {
+            console.log('Client was logged out', reason)
+            // Coloque aqui ações a serem tomadas quando o cliente for desconectado
+            // Por exemplo, reiniciar o cliente ou notificar um administrador
+        })
     }
 
     // Configure the bot and send an initialization message
@@ -55,7 +65,7 @@ export class NotifyBot {
         await client.setStatus(this.description)
 
         if (this.profileImage != null) {
-            const media: MessageMedia = await MessageMedia.fromUrl(this.profileImage, {unsafeMime: true})
+            const media: MessageMedia = await MessageMedia.fromUrl(this.profileImage, { unsafeMime: true })
             await client.setProfilePicture(media)
         }
     }
@@ -68,8 +78,42 @@ export class NotifyBot {
 
     private onHandleMessages(client: Client) {
         client.on('message', async (msg: Message) => {
-            
+            if (this.isAdmin(msg.from) || this.amI(msg.from)) {
+                this.updateAutomaticMessageWithCommand(msg.body)
+            }
+
+            if (this.config) {
+                if (this.config.automaticMessage != null && this.config.automaticMessagePermission) {
+                    await client.sendMessage(msg.from, this.config.automaticMessage)
+                }
+            }
         })
+    }
+
+    private isAdmin(messageFrom: string): boolean {
+        const phone: string = messageFrom.replace("@c.us", "")
+        if (this.superAdmins.includes(phone)) {
+            return true
+        } else { return false }
+    }
+
+    private amI(messageFrom: string): boolean {
+        const phone: string = messageFrom.replace("@c.us", "")
+        if (phone === this.number) {
+            return true
+        } else { return false }
+    }
+
+    private updateAutomaticMessageWithCommand(command: string) {
+        if (this.config) {
+            if (command === "/start") {
+                this.config.automaticMessagePermission = true
+                new NotifyBotService().updateBotConfig(this.id, this.config)
+            } else if (command === "/stop") {
+                this.config.automaticMessagePermission = false
+                new NotifyBotService().updateBotConfig(this.id, this.config)
+            }
+        }  
     }
 
     // Destroy the bot and deletes cache
@@ -110,11 +154,11 @@ export class NotifyBot {
         await groupChat.setDescription(description)
         await groupChat.setInfoAdminsOnly(true)
         await groupChat.promoteParticipants(admins)
-        
-        if(imgProfileUrl != null) {
-            new Promise(async() => {
+
+        if (imgProfileUrl != null) {
+            new Promise(async () => {
                 try {
-                    const media: MessageMedia = await MessageMedia.fromUrl(imgProfileUrl, {unsafeMime: true})
+                    const media: MessageMedia = await MessageMedia.fromUrl(imgProfileUrl, { unsafeMime: true })
                     await groupChat.setPicture(media)
                 } catch (error) {
                     console.log(error)
@@ -137,26 +181,26 @@ export class NotifyBot {
         const group = await this.returnGroupById(groupId)
         const totalParticipants: number = group.participants.length
 
-        if(totalParticipants < 1003) {
+        if (totalParticipants < 1003) {
             try {
                 await group.addParticipants(`${phone}@c.us`)
                 return
 
             } catch (error) {
                 throw new Error(Errors.UserNotAdded)
-                
+
             }
         }
-        
+
         throw new Error(Errors.MaxParticipantsReached)
-        
+
     }
 
     // Remove a participant from the group
-    async removeParticipantFromTheGroup(groupId: string, phone: string)  {
+    async removeParticipantFromTheGroup(groupId: string, phone: string) {
         const group = await this.returnGroupById(groupId)
         try {
-            if(this.number != phone) { await group.removeParticipants([`${phone}@c.us`]) }
+            if (this.number != phone) { await group.removeParticipants([`${phone}@c.us`]) }
         } catch (error) {
             throw new Error(Errors.UserNotRemoved)
         }
@@ -165,7 +209,7 @@ export class NotifyBot {
     // Delete the group
     async deleteGroup(groupId: string) {
         const group = await this.returnGroupById(groupId)
-        for(let participant of group.participants) {
+        for (let participant of group.participants) {
             try {
                 await group.removeParticipants([participant.id._serialized])
             } catch (error) {
@@ -174,7 +218,7 @@ export class NotifyBot {
         }
 
         const groupDeleted: boolean = await group.delete()
-        if(groupDeleted === false) { throw new Error(Errors.NoGroupsWereDeletes) }
+        if (groupDeleted === false) { throw new Error(Errors.NoGroupsWereDeletes) }
         return
     }
 
