@@ -1,8 +1,8 @@
 import { ErrorResponse } from "../data/models/interfaces/ErrorResponse"
-import {Errors} from "../data/models/enums/Errors"
+import { Errors } from "../data/models/enums/Errors"
 
 export function errorResponse(error: string): ErrorResponse {
-    switch(error) {
+    switch (error) {
         case Errors.UnableToCreateBot:
             return {
                 statusCode: 500,
@@ -14,6 +14,12 @@ export function errorResponse(error: string): ErrorResponse {
                 statusCode: 422,
                 error: Errors.UnableToDeleteBot,
                 details: "There was an error deleting the bot."
+            }
+        case Errors.BotNotFound:
+            return {
+                statusCode: 404,
+                error: Errors.BotNotFound,
+                details: null
             }
         case Errors.MaxParticipantsReached:
             return {

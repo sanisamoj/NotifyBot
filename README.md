@@ -32,7 +32,7 @@ Para instalar o projeto para testes, utilizaremos o Docker.
 
 ```.env
 SUPER_USER= #Mais de um superAdmin, separar por vírgula -- numero, numero, numero
-MONGO_HOST=mongodb://localhost:27017 #mongodb://host.docker.internal //mongodb://localhost:27017
+MONGO_HOST=mongodb://localhost:27017 #mongodb://host.docker.internal ou //mongodb://mongodb:27017
 ```
 > Se você estiver expondo a porta do MongoDB no Docker, é necessário alterar o valor da variável **MONGO_HOST** para __mongodb://host.docker.internal:27017__.
 

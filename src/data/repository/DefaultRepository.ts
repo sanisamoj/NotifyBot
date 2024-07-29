@@ -61,8 +61,8 @@ export class DefaultRepository extends DatabaseRepository {
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
-        const notify: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
-        let qrCode: string = notify?.qrCode ?? "undefined"
+        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        let qrCode: string = notifyBot.qrCode ?? "undefined"
 
         const botInfo: BotInfo = {
             id: botId,
@@ -73,10 +73,17 @@ export class DefaultRepository extends DatabaseRepository {
             qrCode: qrCode,
             groupsId: botMongodb.groupsId,
             config: botMongodb.config,
+            active: notifyBot.active,
             createdAt: botMongodb.createdAt
         }
 
         return botInfo
+    }
+
+    private getNotifyBot(botId: string): NotifyBot {
+        const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
+        if (!notifyBot) { throw new Error(Errors.BotNotFound) }
+        return notifyBot
     }
 
     async deleteBot(id: string): Promise<void> {
@@ -122,12 +129,6 @@ export class DefaultRepository extends DatabaseRepository {
     async sendMessage(botId: string, to: string, message: string): Promise<void> {
         const notifyBot: NotifyBot = this.getNotifyBot(botId)
         notifyBot.sendMessage(to, message)
-    }
-
-    private getNotifyBot(botId: string): NotifyBot {
-        const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
-        if (!notifyBot) { throw new Error(Errors.BotNotFound) }
-        return notifyBot
     }
 
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {

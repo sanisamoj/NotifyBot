@@ -1,15 +1,10 @@
 import Fastify, { FastifyInstance } from "fastify"
 import { routes } from "./routes"
 import { Config } from "./Config"
-import { ErrorsController } from "./controllers/ErrorsController"
 
 const fastify: FastifyInstance = Fastify({
     logger: true,
     disableRequestLogging: true
-})
-
-fastify.setErrorHandler((error, request, reply) => {
-    new ErrorsController().globalFastifyError(error, reply)
 })
 
 fastify.register(routes)
@@ -30,6 +25,7 @@ Config.restartAllBots()
 
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)
+    
 })
 
 process.on('unhandledRejection', (error) => {

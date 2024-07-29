@@ -1,4 +1,4 @@
-import {FastifyReply, FastifyRequest} from "fastify"
+import { FastifyReply, FastifyRequest } from "fastify"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
 import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest"
 import { CreateGroupRequest } from "../data/models/interfaces/CreateGroupRequest"
@@ -17,35 +17,35 @@ export class BotController {
     }
 
     async deleteBot(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
+        const { id } = request.params as any
         await new BotService().deleteBotById(id)
         return reply.status(200).send()
     }
 
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
-        const {phone, message} = request.body as any
+        const { id } = request.params as any
+        const { phone, message } = request.body as any
 
         const sendMessageRequest: SendMessageRequest = {
             botId: id,
             phone: phone,
             message: message
         }
-        
-        new BotService().sendMessage(sendMessageRequest)
+
+        await new BotService().sendMessage(sendMessageRequest)
         return reply.status(200).send()
     }
 
     async returnBotById(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
+        const { id } = request.params as any
         const botInfo: BotInfo = await new BotService().getBotById(id)
         return reply.send(botInfo)
     }
 
     async createGroup(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
+        const { id } = request.params as any
         const createGroupRequest = request.body as CreateGroupRequest
-        
+
         const createGroupInfo: CreateGroupInfo = {
             botId: id,
             title: createGroupRequest.title,
@@ -59,21 +59,21 @@ export class BotController {
     }
 
     async returnGroupById(request: FastifyRequest, reply: FastifyReply) {
-        const {id, groupId} = request.params as any
+        const { id, groupId } = request.params as any
         const groupInfo: GroupInfo = await new BotService().getGroupById(id, groupId)
 
         return reply.status(200).send(groupInfo)
     }
 
     async returnGroupsFromTheBot(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
+        const { id } = request.params as any
         const groupsInfo: GroupInfo[] = await new BotService().getAllGroupsFromTheBot(id)
 
         return reply.status(200).send(groupsInfo)
     }
 
     async addParticipantToGroup(request: FastifyRequest, reply: FastifyReply) {
-        const {id, groupId, phone} = request.params as any
+        const { id, groupId, phone } = request.params as any
         const dataForActionWithParticipant: DataForActionWithParticipant = {
             botId: id,
             groupId: groupId,
@@ -85,7 +85,7 @@ export class BotController {
     }
 
     async removeParticipantToGroup(request: FastifyRequest, reply: FastifyReply) {
-        const {id, groupId, phone} = request.params as any
+        const { id, groupId, phone } = request.params as any
         const dataForActionWithParticipant: DataForActionWithParticipant = {
             botId: id,
             groupId: groupId,
@@ -97,14 +97,14 @@ export class BotController {
     }
 
     async groupDelete(request: FastifyRequest, reply: FastifyReply) {
-        const {id, groupId} = request.params as any
+        const { id, groupId } = request.params as any
         await new BotService().deleteGroup(id, groupId)
         reply.status(200).send()
     }
 
     async sendMessageToGroup(request: FastifyRequest, reply: FastifyReply) {
-        const {id} = request.params as any
-        const {groupId, message} = request.body as any
+        const { id } = request.params as any
+        const { groupId, message } = request.body as any
         const sendMessageInfo: SendMessageInfo = {
             botId: id,
             to: groupId,

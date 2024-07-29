@@ -2,7 +2,7 @@ import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { BotCreateData } from '../data/models/interfaces/BotCreateData'
 import { Config } from '../Config'
-import { Client, GroupChat, LocalAuth, Message, MessageMedia } from 'whatsapp-web.js'
+import { Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../data/models/enums/Errors'
 import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
@@ -16,6 +16,7 @@ export class NotifyBot {
     profileImage: string | null = null
     qrCode: string | undefined = undefined
     config: NotifyBotConfig | null = null
+    active: boolean = false
 
     private client!: Client
     private superAdmins: string[]
@@ -45,6 +46,7 @@ export class NotifyBot {
             console.log(`Bot ${this.number} | Online ✅`)
             this.number = this.client.info.wid.user
             this.sendMessageOfInitialization(this.client, this.name)
+            this.active = true
         })
 
         this.client.initialize().then(async () => {
@@ -54,8 +56,20 @@ export class NotifyBot {
 
         this.client.on('disconnected', (reason) => {
             console.log('Client was logged out', reason)
-            // Coloque aqui ações a serem tomadas quando o cliente for desconectado
-            // Por exemplo, reiniciar o cliente ou notificar um administrador
+            this.active = false
+        })
+
+        this.client.on('change_state', (status: WAState) => {
+            switch(status) {
+                case WAState.CONFLICT:
+                    this.active = false
+                    break
+                case WAState.CONNECTED:
+                    this.active = true
+                    break
+                default:
+                    break
+            }
         })
     }
 
@@ -68,6 +82,13 @@ export class NotifyBot {
             const media: MessageMedia = await MessageMedia.fromUrl(this.profileImage, { unsafeMime: true })
             await client.setProfilePicture(media)
         }
+    }
+
+    private async restart() {
+        this.client.initialize().then(async () => {
+            this.start(this.client)
+            this.onHandleMessages(this.client)
+        })
     }
 
     private async sendMessageOfInitialization(client: Client, botName: string) {

@@ -1,4 +1,5 @@
 import { Config } from "../Config"
+import { Errors } from "../data/models/enums/Errors"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
 import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"

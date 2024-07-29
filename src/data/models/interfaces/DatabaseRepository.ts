@@ -14,8 +14,8 @@ export abstract class DatabaseRepository {
     abstract destroyAllBots(): void
     abstract stopAllBots(): void
     abstract restartAllBots(): void
-    abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): void
-    abstract sendMessage(botId: string, to: string, message: string): void
+    abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
+    abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>
     abstract getGroupById(botId: string, groupId: string): Promise<GroupInfo>
     abstract getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]>

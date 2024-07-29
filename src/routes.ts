@@ -1,9 +1,16 @@
-import {RouteShorthandOptions} from "fastify"
-import {TokenValidator} from "./middleware/TokenValidator"
+import { RouteShorthandOptions } from "fastify"
+import { TokenValidator } from "./middleware/TokenValidator"
 import { BotController } from "./controllers/BotController"
+import { ErrorResponse } from "./data/models/interfaces/ErrorResponse"
+import { errorResponse } from "./error/errorResponse"
+import { ErrorsController } from "./controllers/ErrorsController"
 
 export async function routes(fastify: any, options: RouteShorthandOptions): Promise<void> {
     const authentication: TokenValidator = new TokenValidator()
+
+    fastify.setErrorHandler(function (error: any, request: any, reply: any) {
+        new ErrorsController().globalFastifyError(error, reply)
+    })
 
     // Rota responsável por criar um bot
     fastify.post("/bot", new BotController().createBot)
@@ -25,6 +32,8 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.delete("/bot/:id/group/:groupId/remove/:phone", new BotController().removeParticipantToGroup)
     // Rota responsável por remover um grupo
     fastify.delete("/bot/:id/group/:groupId", new BotController().groupDelete)
+
+
 
     // Rotas de usuários
 
