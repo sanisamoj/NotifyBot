@@ -3,6 +3,9 @@ import rateLimit from '@fastify/rate-limit'
 import cors from '@fastify/cors'
 import { routes } from "./routes"
 import { Config } from "./Config"
+import * as dotenv from 'dotenv'
+
+dotenv.config()
 
 const fastify: FastifyInstance = Fastify({
     logger: true,
@@ -19,7 +22,8 @@ fastify.register(routes)
 
 const start = async () => {
     try {
-        await fastify.listen({ port: 9091, host: "0.0.0.0" })
+        const port: string = process.env.PORT as string
+        await fastify.listen({ port: parseInt(port), host: "0.0.0.0" })
         console.log('Servidor Principal | Online ✅')
 
     } catch (error) {
