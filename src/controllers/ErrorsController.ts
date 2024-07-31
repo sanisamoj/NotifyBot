@@ -1,4 +1,4 @@
-import { FastifyError, FastifyReply } from "fastify"
+import { FastifyReply } from "fastify"
 import { ErrorResponse } from "../data/models/interfaces/ErrorResponse"
 import { errorResponse } from "../error/errorResponse"
 

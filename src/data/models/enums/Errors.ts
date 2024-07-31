@@ -1,4 +1,5 @@
 export enum Errors {
+    InvalidSignature = "invalid signature",
     UserNotAdded = "User not added in group!",
     MaxParticipantsReached = "Total number of participants reached!",
     UserNotRemoved = "User was not removed from the group!",

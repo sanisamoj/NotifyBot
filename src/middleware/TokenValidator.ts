@@ -35,7 +35,7 @@ export class TokenValidator {
         const [, token] = authToken.split(" ")
 
         try {
-            const moderatorSecret: string = process.env.MODERATOR_SECRET_KEY as string
+            const moderatorSecret: string = process.env.ADMIN_SECRET_KEY as string
             const {sub } = jwt.verify(token, moderatorSecret)
 
         } catch (error: any) {

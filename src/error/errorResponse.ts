@@ -69,6 +69,12 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.CouldNotDeleteItem,
                 details: "No items found matching the provided conditions."
             }
+        case Errors.InvalidSignature:
+            return {
+                statusCode: 401,
+                error: Errors.InvalidToken,
+                details: null
+            }
         default:
             return {
                 statusCode: 500,
