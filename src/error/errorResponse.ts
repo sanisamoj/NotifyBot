@@ -75,6 +75,12 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.InvalidToken,
                 details: null
             }
+        case Errors.TooManyRequests:
+            return {
+                statusCode: 429,
+                error: Errors.TooManyRequests,
+                details: null
+            }
         default:
             return {
                 statusCode: 500,

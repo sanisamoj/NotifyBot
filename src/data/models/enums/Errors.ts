@@ -1,4 +1,5 @@
 export enum Errors {
+    TooManyRequests = "Too Many Requests",
     InvalidSignature = "invalid signature",
     UserNotAdded = "User not added in group!",
     MaxParticipantsReached = "Total number of participants reached!",

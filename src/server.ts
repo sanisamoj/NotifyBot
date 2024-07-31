@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance } from "fastify"
+import rateLimit from '@fastify/rate-limit'
 import cors from '@fastify/cors'
 import { routes } from "./routes"
 import { Config } from "./Config"
@@ -13,6 +14,7 @@ fastify.register(cors, {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 })
 
+fastify.register(rateLimit)
 fastify.register(routes)
 
 const start = async () => {
