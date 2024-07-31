@@ -13,7 +13,7 @@ export abstract class DatabaseRepository {
     abstract deleteBot(bot: string): void
     abstract destroyAllBots(): void
     abstract stopAllBots(): void
-    abstract restartAllBots(): void
+    abstract initializeAllBots(): void
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
     abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>

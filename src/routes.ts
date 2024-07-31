@@ -1,8 +1,6 @@
 import { RouteShorthandOptions } from "fastify"
 import { TokenValidator } from "./middleware/TokenValidator"
 import { BotController } from "./controllers/BotController"
-import { ErrorResponse } from "./data/models/interfaces/ErrorResponse"
-import { errorResponse } from "./error/errorResponse"
 import { ErrorsController } from "./controllers/ErrorsController"
 
 export async function routes(fastify: any, options: RouteShorthandOptions): Promise<void> {

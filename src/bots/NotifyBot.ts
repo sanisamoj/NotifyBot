@@ -57,6 +57,7 @@ export class NotifyBot {
         this.client.on('disconnected', (reason) => {
             console.log('Client was logged out', reason)
             this.active = false
+            this.qrCode = ""
         })
 
         this.client.on('change_state', (status: WAState) => {
@@ -104,6 +105,7 @@ export class NotifyBot {
             }
 
             if (this.config) {
+                // Automatic messages
                 if (this.config.automaticMessage != null && this.config.automaticMessagePermission) {
                     await client.sendMessage(msg.from, this.config.automaticMessage)
                 }

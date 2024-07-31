@@ -1,10 +1,16 @@
 import Fastify, { FastifyInstance } from "fastify"
+import cors from '@fastify/cors'
 import { routes } from "./routes"
 import { Config } from "./Config"
 
 const fastify: FastifyInstance = Fastify({
     logger: true,
     disableRequestLogging: true
+})
+
+fastify.register(cors, {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 })
 
 fastify.register(routes)
@@ -21,7 +27,7 @@ const start = async () => {
 }
 
 start()
-Config.restartAllBots()
+Config.initializeAllBots()
 
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)

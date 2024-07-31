@@ -16,6 +16,7 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
 - Gerenciar bots.
     - Retornar bots.
     - Retornar participantes dos grupos.
+    - Gerenciamento das configurações de cada bot.
 
 ## Tecnologias e Ferramentas Utilizadas
 

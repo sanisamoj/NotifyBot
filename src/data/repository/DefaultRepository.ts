@@ -22,6 +22,25 @@ export class DefaultRepository extends DatabaseRepository {
     private mongodb: MongodbOperations = new MongodbOperations()
 
     async registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo> {
+        const botMongodb: BotMongodb = this.botMongodbFactory(createBotRequest)
+        await this.mongodb.register<BotMongodb>(CollectionsInDb.Bots, botMongodb)
+
+        let botData: BotCreateData = {
+            id: botMongodb._id.toString(),
+            name: createBotRequest.name,
+            description: createBotRequest.description,
+            profileImage: createBotRequest.profileImage,
+            admins: createBotRequest.admins,
+            config: createBotRequest.config
+        }
+
+        const notifyBot: NotifyBot = new NotifyBot(botData)
+        DefaultRepository.notifyBots.push(notifyBot)
+
+        return this.botInfoFactory(botMongodb)
+    }
+
+    private botMongodbFactory(createBotRequest: CreateBotRequest): BotMongodb {
         const botId: ObjectId = new ObjectId()
         const botMongodb: BotMongodb = {
             _id: botId,
@@ -35,21 +54,7 @@ export class DefaultRepository extends DatabaseRepository {
             createdAt: new Date().toDateString()
         }
 
-        await this.mongodb.register<BotMongodb>(CollectionsInDb.Bots, botMongodb)
-
-        let botData: BotCreateData = {
-            id: botId.toString(),
-            name: createBotRequest.name,
-            description: createBotRequest.description,
-            profileImage: createBotRequest.profileImage,
-            admins: createBotRequest.admins,
-            config: createBotRequest.config
-        }
-
-        const notifyBot: NotifyBot = new NotifyBot(botData)
-        DefaultRepository.notifyBots.push(notifyBot)
-
-        return this.botInfoFactory(botMongodb)
+        return botMongodb
     }
 
     async getBotById(id: string): Promise<BotInfo> {
@@ -104,7 +109,7 @@ export class DefaultRepository extends DatabaseRepository {
         DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.stop() })
     }
 
-    async restartAllBots(): Promise<void> {
+    async initializeAllBots(): Promise<void> {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach((bot => {
@@ -123,7 +128,7 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
-        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) }, { config: config})
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) }, { config: config })
     }
 
     async sendMessage(botId: string, to: string, message: string): Promise<void> {
