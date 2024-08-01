@@ -36,5 +36,5 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     // Rotas de admin
 
     // Rota respónsável por retornar o token do admin
-    fastify.post("/admin", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitAdminLogin }, new AdminController().login)
+    fastify.post("/admin", { config: rateLimitAdminLogin }, new AdminController().login)
 }
