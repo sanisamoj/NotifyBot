@@ -2,7 +2,7 @@ import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { BotCreateData } from '../data/models/interfaces/BotCreateData'
 import { Config } from '../Config'
-import { Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
+import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../data/models/enums/Errors'
 import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
@@ -15,7 +15,7 @@ export class NotifyBot {
     number: string = ""
     profileImage: string | null = null
     qrCode: string | undefined = undefined
-    config: NotifyBotConfig | null = null
+    private config: NotifyBotConfig | null = null
     active: boolean = false
 
     private client!: Client
@@ -58,6 +58,7 @@ export class NotifyBot {
             console.log('Client was logged out', reason)
             this.active = false
             this.qrCode = ""
+            this.destroy()
         })
 
         this.client.on('change_state', (status: WAState) => {
@@ -72,6 +73,14 @@ export class NotifyBot {
                     break
             }
         })
+
+        this.client.on('call', (call: Call) => {
+            if(this.config && this.config.callPermission === true) {
+                try {
+                    call.reject()
+                } catch (error: any) {}
+            } 
+        })
     }
 
     // Configure the bot and send an initialization message
@@ -85,13 +94,7 @@ export class NotifyBot {
         }
     }
 
-    private async restart() {
-        this.client.initialize().then(async () => {
-            this.start(this.client)
-            this.onHandleMessages(this.client)
-        })
-    }
-
+    // Sends startup message to all admins
     private async sendMessageOfInitialization(client: Client, botName: string) {
         this.superAdmins.forEach(async element => {
             await client.sendMessage(`${element}@c.us`, `*Bot ${botName.toUpperCase()} Initialized*`)
@@ -127,16 +130,24 @@ export class NotifyBot {
         } else { return false }
     }
 
-    private updateAutomaticMessageWithCommand(command: string) {
+    private updateAutomaticMessageWithCommand(command: string): void {
         if (this.config) {
-            if (command === "/start") {
+            if (command === "/automatic=true") {
                 this.config.automaticMessagePermission = true
                 new NotifyBotService().updateBotConfig(this.id, this.config)
-            } else if (command === "/stop") {
+            } else if (command === "/automatic=false") {
                 this.config.automaticMessagePermission = false
                 new NotifyBotService().updateBotConfig(this.id, this.config)
             }
         }  
+    }
+
+    updateBotConfig(notifyBotConfig: NotifyBotConfig | null): void {
+        this.config = notifyBotConfig
+    }
+
+    getBotConfig(): NotifyBotConfig | null {
+        return this.config
     }
 
     // Destroy the bot and deletes cache

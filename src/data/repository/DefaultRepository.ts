@@ -64,6 +64,16 @@ export class DefaultRepository extends DatabaseRepository {
         return this.botInfoFactory(botMongodb)
     }
 
+    async getAllBots(): Promise<BotInfo[]> {
+        const botMongodbList: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
+        const botInfoList: BotInfo[] = []
+        botMongodbList.forEach(async (botMongodb : BotMongodb) => {
+            const botInfo: BotInfo = await this.botInfoFactory(botMongodb)
+            botInfoList.push(botInfo)
+        })
+        return botInfoList
+    }
+
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
         const notifyBot: NotifyBot = this.getNotifyBot(botId)
@@ -129,6 +139,14 @@ export class DefaultRepository extends DatabaseRepository {
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
         await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) }, { config: config })
+        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        notifyBot.updateBotConfig(config)
+    }
+
+    getBotConfig(botId: string): NotifyBotConfig | null {
+        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        const notifyBotConfig: NotifyBotConfig | null = notifyBot.getBotConfig()
+        return notifyBotConfig
     }
 
     async sendMessage(botId: string, to: string, message: string): Promise<void> {

@@ -10,11 +10,13 @@ import { SendMessageInfo } from "./SendMessageInfo"
 export abstract class DatabaseRepository {
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
     abstract getBotById(id: string): Promise<BotInfo>
+    abstract getAllBots(): Promise<BotInfo[]>
     abstract deleteBot(bot: string): void
     abstract destroyAllBots(): void
     abstract stopAllBots(): void
     abstract initializeAllBots(): void
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
+    abstract getBotConfig(botId: string): NotifyBotConfig | null
     abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>
     abstract getGroupById(botId: string, groupId: string): Promise<GroupInfo>

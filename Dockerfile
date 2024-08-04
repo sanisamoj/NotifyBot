@@ -32,8 +32,11 @@ COPY package*.json ./
 # Instala as dependências do projeto
 RUN npm install
 
+# Executa o build da aplicação
+RUN npm run build
+
 # Copia todos os arquivos e diretórios restantes para o diretório de trabalho
 COPY . .
 
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "deploy"]

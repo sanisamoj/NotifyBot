@@ -5,6 +5,7 @@ import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
 import { DataForActionWithParticipant } from "../data/models/interfaces/DataForActionWithParticipant"
 import { GroupInfo } from "../data/models/interfaces/GroupInfo"
+import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
 import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
 import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest"
 
@@ -20,12 +21,16 @@ export class BotService {
         return botInfo
     }
 
-    async deleteBotById(id: string) {
+    async deleteBotById(id: string): Promise<void> {
         this.repository.deleteBot(id)
     }
 
     async getBotById(id: string): Promise<BotInfo> {
-        return this.repository.getBotById(id)
+        return await this.repository.getBotById(id)
+    }
+
+    async getAllBots(): Promise<BotInfo[]> {
+        return await this.repository.getAllBots()
     }
 
     async sendMessage(sendMessageRequest: SendMessageRequest) {
@@ -61,5 +66,10 @@ export class BotService {
 
     async sendMessageToGroup(sendMessageInfo: SendMessageInfo): Promise<void> {
         await this.repository.sendMessageTotheGroup(sendMessageInfo)
+    }
+
+    async updateNotifyBotConfig(botId: string, notifyBotConfig: NotifyBotConfig | null): Promise<NotifyBotConfig | null> {
+        await this.repository.updateBotConfig(botId, notifyBotConfig)
+        return this.repository.getBotConfig(botId)
     }
 }

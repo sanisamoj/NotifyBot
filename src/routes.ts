@@ -21,7 +21,7 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     // Rota responsável por enviar uma mensagem para um grupo
     fastify.post("/bot/:id/group/message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessageToGroup)
     // Rota responsável por retornar um bot
-    fastify.get("/bot/:id", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().returnBotById)
+    fastify.get("/bot/:id", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().getBotById)
     // Rota responsável por criar um grupo
     fastify.post("/bot/:id/group", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().createGroup)
     // Rota responsável retornar um grupo pelo ID

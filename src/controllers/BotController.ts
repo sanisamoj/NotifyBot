@@ -8,6 +8,8 @@ import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
 import { BotService } from "../services/BotService"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { GroupInfo } from "../data/models/interfaces/GroupInfo"
+import { UpdateBotConfigRequest } from "../data/models/interfaces/UpdateBotConfigRequest"
+import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
@@ -36,10 +38,15 @@ export class BotController {
         return reply.status(200).send()
     }
 
-    async returnBotById(request: FastifyRequest, reply: FastifyReply) {
+    async getBotById(request: FastifyRequest, reply: FastifyReply) {
         const { id } = request.params as any
         const botInfo: BotInfo = await new BotService().getBotById(id)
         return reply.send(botInfo)
+    }
+
+    async getAllbots(request: FastifyRequest, reply: FastifyReply) {
+        const botInfoList: BotInfo[] = await new BotService().getAllBots()
+        return reply.send(botInfoList)
     }
 
     async createGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -113,5 +120,15 @@ export class BotController {
         await new BotService().sendMessageToGroup(sendMessageInfo)
 
         return reply.status(200).send()
+    }
+
+    async updateBotConfig(request: FastifyRequest, reply: FastifyReply) {
+        const updateBotConfigRequest: UpdateBotConfigRequest = request.body as UpdateBotConfigRequest
+        const response: NotifyBotConfig | null = await new BotService().updateNotifyBotConfig(updateBotConfigRequest.botId, updateBotConfigRequest.config)
+        if(response) {
+            reply.status(200).send(response)
+        } else {
+            reply.send(200).send()
+        }
     }
 }

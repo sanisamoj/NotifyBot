@@ -1,6 +1,6 @@
 import JwtModule from 'jsonwebtoken'
 
-export function authorizationToken(id: string, username: string, secret: string): string {
+export function authorizationToken(id: string, username: string, secret: string, expiresIn: string = "30d"): string {
     const JWT = JwtModule
 
     return JWT.sign(
@@ -11,7 +11,7 @@ export function authorizationToken(id: string, username: string, secret: string)
         secret,
         {
             subject: id,
-            expiresIn: "30d",
+            expiresIn: expiresIn,
         }
     )
 }
