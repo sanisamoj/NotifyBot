@@ -49,7 +49,6 @@ export class DefaultRepository extends DatabaseRepository {
             number: "",
             profileImageUrl: createBotRequest.profileImage ?? "",
             admins: createBotRequest.admins,
-            groupsId: [],
             config: createBotRequest.config,
             createdAt: new Date().toDateString()
         }
@@ -66,18 +65,23 @@ export class DefaultRepository extends DatabaseRepository {
 
     async getAllBots(): Promise<BotInfo[]> {
         const botMongodbList: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
-        const botInfoList: BotInfo[] = []
-        botMongodbList.forEach(async (botMongodb : BotMongodb) => {
-            const botInfo: BotInfo = await this.botInfoFactory(botMongodb)
-            botInfoList.push(botInfo)
+
+        // Create a list of promises to map each botMongodb to botInfo
+        const botInfoPromises: Promise<BotInfo>[] = botMongodbList.map(async (botMongodb: BotMongodb) => {
+            return await this.botInfoFactory(botMongodb)
         })
+
+        // Waits for all promises to be resolved and returns the result
+        const botInfoList: BotInfo[] = await Promise.all(botInfoPromises)
+
         return botInfoList
     }
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
         const notifyBot: NotifyBot = this.getNotifyBot(botId)
-        let qrCode: string = notifyBot.qrCode ?? "undefined"
+        const qrCode: string = notifyBot.qrCode ?? "undefined"
+        const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
 
         const botInfo: BotInfo = {
             id: botId,
@@ -86,7 +90,7 @@ export class DefaultRepository extends DatabaseRepository {
             number: botMongodb.number,
             profileImageUrl: botMongodb.profileImageUrl,
             qrCode: qrCode,
-            groupsId: botMongodb.groupsId,
+            groups: groups,
             config: botMongodb.config,
             active: notifyBot.active,
             createdAt: botMongodb.createdAt
@@ -212,7 +216,7 @@ export class DefaultRepository extends DatabaseRepository {
 
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
         const norifyBot: NotifyBot = this.getNotifyBot(botId)
-        const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Bots, { botId: botId })
+        const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Groups, { botId: botId })
         const groupInfoList: GroupInfo[] = await Promise.all(groups.map(async (group) => {
             const groupChat: GroupChat = await norifyBot.returnGroupById(group.groupId)
             return this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)

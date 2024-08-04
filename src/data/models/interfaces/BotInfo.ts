@@ -1,3 +1,4 @@
+import { GroupInfo } from "./GroupInfo"
 import { NotifyBotConfig } from "./NotifyBotConfig"
 
 export interface BotInfo {
@@ -7,7 +8,7 @@ export interface BotInfo {
     number: string
     profileImageUrl: string
     qrCode: string
-    groupsId: string[]
+    groups: GroupInfo[]
     config: NotifyBotConfig | null
     active: boolean
     createdAt: string
