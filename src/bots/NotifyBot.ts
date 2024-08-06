@@ -78,6 +78,9 @@ export class NotifyBot {
             if(this.config && this.config.callPermission === true) {
                 try {
                     call.reject()
+                    if(this.config.callPermission) {
+                        this.client.sendMessage(call.from!!, this.config.automaticCallMessage!!)
+                    }
                 } catch (error: any) {}
             } 
         })

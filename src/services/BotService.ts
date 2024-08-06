@@ -1,13 +1,16 @@
 import { Config } from "../Config"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
+import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
 import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
 import { DataForActionWithParticipant } from "../data/models/interfaces/DataForActionWithParticipant"
 import { GroupInfo } from "../data/models/interfaces/GroupInfo"
 import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
+import { PaginationResponse } from "../data/models/interfaces/PaginationResponse"
 import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
 import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest"
+import { paginationMethod } from "../utils/paginationMethod"
 
 export class BotService {
     private repository: DatabaseRepository
@@ -31,6 +34,14 @@ export class BotService {
 
     async getAllBots(): Promise<BotInfo[]> {
         return await this.repository.getAllBots()
+    }
+
+    async getAllBotsWithPagination(page: number, size: number): Promise<BotInfoWithPagination> {
+        const bots: BotInfo[] = await this.repository.getAllBotsWithPagination(page, size)
+        const totalItems: number = await this.repository.getAllBotsCount()
+        const paginationResponse: PaginationResponse = paginationMethod(totalItems, size, page)
+        const botInfoWithPagination: BotInfoWithPagination = { bots: bots, pagination: paginationResponse }
+        return botInfoWithPagination
     }
 
     async sendMessage(sendMessageRequest: SendMessageRequest) {

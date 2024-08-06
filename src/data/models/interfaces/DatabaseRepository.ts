@@ -11,6 +11,8 @@ export abstract class DatabaseRepository {
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
     abstract getBotById(id: string): Promise<BotInfo>
     abstract getAllBots(): Promise<BotInfo[]>
+    abstract getAllBotsWithPagination(page: number, size: number): Promise<BotInfo[]>
+    abstract getAllBotsCount(): Promise<number>
     abstract deleteBot(bot: string): void
     abstract destroyAllBots(): void
     abstract stopAllBots(): void

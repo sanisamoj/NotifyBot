@@ -10,6 +10,7 @@ import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { GroupInfo } from "../data/models/interfaces/GroupInfo"
 import { UpdateBotConfigRequest } from "../data/models/interfaces/UpdateBotConfigRequest"
 import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
+import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
@@ -19,13 +20,13 @@ export class BotController {
     }
 
     async deleteBot(request: FastifyRequest, reply: FastifyReply) {
-        const { id } = request.params as any
+        const { id } = request.params as { id: string }
         await new BotService().deleteBotById(id)
         return reply.status(200).send()
     }
 
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
-        const { id } = request.params as any
+        const { id } = request.params as { id: string }
         const { phone, message } = request.body as any
 
         const sendMessageRequest: SendMessageRequest = {
@@ -39,14 +40,28 @@ export class BotController {
     }
 
     async getBotById(request: FastifyRequest, reply: FastifyReply) {
-        const { id } = request.params as any
+        const { id } = request.params as { id: string }
         const botInfo: BotInfo = await new BotService().getBotById(id)
         return reply.send(botInfo)
     }
 
     async getAllbots(request: FastifyRequest, reply: FastifyReply) {
-        const botInfoList: BotInfo[] = await new BotService().getAllBots()
-        return reply.send(botInfoList)
+        const { page, size } = request.query as { page?: string; size?: string }
+
+        if (page === undefined || size === undefined) {
+            const botInfoList: BotInfo[] = await new BotService().getAllBots()
+            return reply.send(botInfoList)
+        }
+
+        const pageNumber = Number(page)
+        const sizeNumber = Number(size)
+
+        if (isNaN(pageNumber) || isNaN(sizeNumber) || pageNumber <= 0 || sizeNumber <= 0) {
+            return reply.status(400).send({ error: 'Invalid page or size parameters. They must be positive numbers.' })
+        }
+
+        const botsInfoList: BotInfoWithPagination = await new BotService().getAllBotsWithPagination(pageNumber, sizeNumber)
+        return reply.send(botsInfoList)
     }
 
     async createGroup(request: FastifyRequest, reply: FastifyReply) {
@@ -125,7 +140,7 @@ export class BotController {
     async updateBotConfig(request: FastifyRequest, reply: FastifyReply) {
         const updateBotConfigRequest: UpdateBotConfigRequest = request.body as UpdateBotConfigRequest
         const response: NotifyBotConfig | null = await new BotService().updateNotifyBotConfig(updateBotConfigRequest.botId, updateBotConfigRequest.config)
-        if(response) {
+        if (response) {
             reply.status(200).send(response)
         } else {
             reply.send(200).send()

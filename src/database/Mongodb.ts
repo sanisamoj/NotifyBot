@@ -93,5 +93,39 @@ export class MongodbOperations {
         
         return updateResult.value
     }
+
+    async countDocuments(collectionName: CollectionsInDb): Promise<number> {
+        const client: MongoClient = new MongoClient(this.uri)
+        const db: Db = client.db(this.mongodbName)
+        
+        try {
+            const collection: Collection = db.collection(collectionName)
+            const count = await collection.countDocuments()
+            return count
+        } finally {
+            await client.close()
+        }
+    }
+
+    async returnAllWithPagination<DocumentType extends Document>(collectionName: CollectionsInDb, page: number, size: number): Promise<WithId<DocumentType>[]> {
+        const client: MongoClient = new MongoClient(this.uri)
+        const db: Db = client.db(this.mongodbName)
+    
+        try {
+            const collection: Collection<DocumentType> = db.collection(collectionName)
+            const cursor = collection.find()
+                .skip((page - 1) * size)
+                .limit(size)
+    
+            const paginatedDocs: WithId<DocumentType>[] = []
+            for await (const doc of cursor) {
+                paginatedDocs.push(doc)
+            }
+    
+            return paginatedDocs
+        } finally {
+            await client.close()
+        }
+    }
     
 }

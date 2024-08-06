@@ -65,7 +65,19 @@ export class DefaultRepository extends DatabaseRepository {
 
     async getAllBots(): Promise<BotInfo[]> {
         const botMongodbList: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
+        return this.botInfoListFactory(botMongodbList)
+    }
 
+    async getAllBotsWithPagination(page: number, size: number): Promise<BotInfo[]> {
+        const botMongodbList: BotMongodb[] = await this.mongodb.returnAllWithPagination<BotMongodb>(CollectionsInDb.Bots, page, size)
+        return this.botInfoListFactory(botMongodbList)
+    }
+
+    async getAllBotsCount(): Promise<number> {
+        return await this.mongodb.countDocuments(CollectionsInDb.Bots)
+    }
+
+    private async botInfoListFactory(botMongodbList: BotMongodb[]): Promise<BotInfo[]> {
         // Create a list of promises to map each botMongodb to botInfo
         const botInfoPromises: Promise<BotInfo>[] = botMongodbList.map(async (botMongodb: BotMongodb) => {
             return await this.botInfoFactory(botMongodb)
@@ -73,7 +85,6 @@ export class DefaultRepository extends DatabaseRepository {
 
         // Waits for all promises to be resolved and returns the result
         const botInfoList: BotInfo[] = await Promise.all(botInfoPromises)
-
         return botInfoList
     }
 
