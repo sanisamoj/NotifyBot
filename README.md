@@ -35,6 +35,7 @@ Para instalar o projeto para testes, utilizaremos o Docker.
 SUPER_USER= #Mais de um superAdmin, separar por vírgula -- numero, numero, numero
 MONGO_HOST=mongodb://localhost:27017 #mongodb://host.docker.internal ou //mongodb://mongodb:27017
 MONGODB_NAME=NotifyBot
+RABBITMQ_HOST=amqp://localhost:5672
 
 #Credenciais de moderador
 ADMIN_SECRET_KEY=JWT_SECRET_KEY

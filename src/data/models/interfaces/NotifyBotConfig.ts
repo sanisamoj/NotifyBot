@@ -3,4 +3,7 @@ export interface NotifyBotConfig {
     automaticMessage: string | null
     callPermission: boolean | null
     automaticCallMessage: string | null
+    queueRabbitMqPermission: boolean | null
+    queueRabbitMqHandleMessage: string | null
+    queueRabbitMqBotStatus: string | null
 }

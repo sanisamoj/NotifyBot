@@ -6,7 +6,9 @@ import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } fr
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../data/models/enums/Errors'
 import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
-import { NotifyBotService } from './NotifyBotService'
+import { RabbitMQService } from '../services/RabbitMQService'
+import { HandleMessageInfo } from '../data/models/interfaces/HandleMessageInfo'
+import { NotifyBotStatus } from '../data/models/interfaces/NotifyBotStatus'
 
 export class NotifyBot {
     id: string
@@ -47,6 +49,7 @@ export class NotifyBot {
             this.number = this.client.info.wid.user
             this.sendMessageOfInitialization(this.client, this.name)
             this.active = true
+            this.sendNotifyBotStatusToRabbitMQ({botId: this.id, active: true})
         })
 
         this.client.initialize().then(async () => {
@@ -58,6 +61,7 @@ export class NotifyBot {
             console.log('Client was logged out', reason)
             this.active = false
             this.qrCode = ""
+            this.sendNotifyBotStatusToRabbitMQ({botId: this.id, active: false})
             this.destroy()
         })
 
@@ -65,9 +69,11 @@ export class NotifyBot {
             switch(status) {
                 case WAState.CONFLICT:
                     this.active = false
+                    this.sendNotifyBotStatusToRabbitMQ({botId: this.id, active: false})
                     break
                 case WAState.CONNECTED:
                     this.active = true
+                    this.sendNotifyBotStatusToRabbitMQ({botId: this.id, active: true})
                     break
                 default:
                     break
@@ -104,19 +110,33 @@ export class NotifyBot {
         })
     }
 
-    private onHandleMessages(client: Client) {
-        client.on('message', async (msg: Message) => {
-            if (this.isAdmin(msg.from) || this.amI(msg.from)) {
-                this.updateAutomaticMessageWithCommand(msg.body)
-            }
-
+    private async onHandleMessages(client: Client) {
+        client.on('message', async (message: Message) => {
             if (this.config) {
                 // Automatic messages
                 if (this.config.automaticMessage != null && this.config.automaticMessagePermission) {
-                    await client.sendMessage(msg.from, this.config.automaticMessage)
+                    await client.sendMessage(message.from, this.config.automaticMessage)
+                }
+                
+                // Sent message to RabbitMQ
+                if(this.config.queueRabbitMqHandleMessage) {
+                    const from: string = message.from.replace("@c.us", "")
+                    const handleMessageInfo: HandleMessageInfo = { botId: this.id, from: from, message: message.body }
+                    await this.sendHandleMessageInfoToRabbitMQ(handleMessageInfo)
                 }
             }
         })
+    }
+
+    private async sendHandleMessageInfoToRabbitMQ(handleMessageInfo: HandleMessageInfo) {
+        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
+        await rabbitMQService.sendMessage(this.config?.queueRabbitMqHandleMessage!!, handleMessageInfo)
+        console.log(this.config?.queueRabbitMqHandleMessage!!)
+    }
+
+    private async sendNotifyBotStatusToRabbitMQ(notifyBotStatus: NotifyBotStatus) {
+        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
+        await rabbitMQService.sendMessage(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
     }
 
     private isAdmin(messageFrom: string): boolean {
@@ -131,18 +151,6 @@ export class NotifyBot {
         if (phone === this.number) {
             return true
         } else { return false }
-    }
-
-    private updateAutomaticMessageWithCommand(command: string): void {
-        if (this.config) {
-            if (command === "/automatic=true") {
-                this.config.automaticMessagePermission = true
-                new NotifyBotService().updateBotConfig(this.id, this.config)
-            } else if (command === "/automatic=false") {
-                this.config.automaticMessagePermission = false
-                new NotifyBotService().updateBotConfig(this.id, this.config)
-            }
-        }  
     }
 
     updateBotConfig(notifyBotConfig: NotifyBotConfig | null): void {
