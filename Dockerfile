@@ -35,6 +35,6 @@ RUN npm install
 # Copia todos os arquivos e diretórios restantes para o diretório de trabalho
 COPY . .
 
-EXPOSE 3000
+EXPOSE 8585
 CMD ["sh", "-c", "npm run build && npm run deploy"]
 

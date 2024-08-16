@@ -50,7 +50,7 @@ ADMIN_PASSWORD=admin
 
 #### Execute o comando a seguir para executar a imagem criada com o Docker.
 
-    docker run --name notify-bot -p 9091:9091 notify-bot:latest
+    docker run --name notify-bot -p 8585:8585 notify-bot:latest
 
 ## Endpoints disponíveis
 
