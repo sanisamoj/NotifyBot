@@ -16,6 +16,8 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.post("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().createBot)
     // Rota responsável por deletar um bot
     fastify.delete("/bot/:id", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().deleteBot)
+    // Rota responsável por alterar as configurações do bot
+    fastify.put("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().updateBotConfig)
     // Rota responsável por enviar uma mensagem com o bot
     fastify.post("/bot/:id/message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessage)
     // Rota responsável por enviar uma mensagem para um grupo
