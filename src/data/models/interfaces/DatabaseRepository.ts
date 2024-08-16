@@ -1,4 +1,3 @@
-import { NotifyBot } from "../../../bots/NotifyBot"
 import { BotInfo } from "./BotInfo"
 import { CreateBotRequest } from "./CreateBotRequest"
 import { CreateGroupInfo } from "./CreateGroupInfo"
@@ -8,16 +7,19 @@ import { NotifyBotConfig } from "./NotifyBotConfig"
 import { SendMessageInfo } from "./SendMessageInfo"
 
 export abstract class DatabaseRepository {
+    abstract initializeBot(botId: string): Promise<void>
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
     abstract getBotById(id: string): Promise<BotInfo>
     abstract getAllBots(): Promise<BotInfo[]>
     abstract getAllBotsWithPagination(page: number, size: number): Promise<BotInfo[]>
     abstract getAllBotsCount(): Promise<number>
-    abstract deleteBot(bot: string): void
-    abstract destroyAllBots(): void
-    abstract stopAllBots(): void
-    abstract initializeAllBots(): void
+    abstract deleteBot(bot: string): Promise<void>
+    abstract stopBot(botId: string): Promise<void>
+    abstract destroyAllBots(): Promise<void>
+    abstract stopAllBots(): Promise<void>
+    abstract initializeAllBots(): Promise<void>
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
+    abstract updateBot(botId: string, field: string, value: any): Promise<void>
     abstract getBotConfig(botId: string): NotifyBotConfig | null
     abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>

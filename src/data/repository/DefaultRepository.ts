@@ -16,10 +16,28 @@ import { DataForActionWithParticipant } from "../models/interfaces/DataForAction
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 import { GroupChat } from "whatsapp-web.js"
 import { NotifyBotConfig } from "../models/interfaces/NotifyBotConfig"
+import { Fields } from "../models/enums/Fields"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
     private mongodb: MongodbOperations = new MongodbOperations()
+
+    async initializeBot(botId: string): Promise<void> {
+        const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
+        if (!botMongodb) { throw new Error(Errors.BotNotFound) }
+
+        let botData: BotCreateData = {
+            id: botMongodb._id.toString(),
+            name: botMongodb.name,
+            description: botMongodb.description,
+            profileImage: botMongodb.profileImageUrl,
+            admins: botMongodb.admins,
+            config: botMongodb.config
+        }
+
+        const notifyBot: NotifyBot = new NotifyBot(botData)
+        DefaultRepository.notifyBots.push(notifyBot)
+    }
 
     async registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo> {
         const botMongodb: BotMongodb = this.botMongodbFactory(createBotRequest)
@@ -124,6 +142,17 @@ export class DefaultRepository extends DatabaseRepository {
         }
 
         this.mongodb.delete(CollectionsInDb.Bots, { _id: new ObjectId(id) })
+        this.removeBotFromTheList(id)
+    }
+
+    async destroyBot(botId: string): Promise<void> {
+        await this.getNotifyBot(botId).destroy()
+        this.removeBotFromTheList(botId)
+    }
+
+    async stopBot(botId: string): Promise<void> {
+        await this.getNotifyBot(botId).stop()
+        this.removeBotFromTheList(botId)
     }
 
     async destroyAllBots(): Promise<void> {
@@ -132,6 +161,13 @@ export class DefaultRepository extends DatabaseRepository {
 
     async stopAllBots(): Promise<void> {
         DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.stop() })
+    }
+
+    private async removeBotFromTheList(botId: String) {
+        const index = DefaultRepository.notifyBots.findIndex(bot => bot.id === botId)
+        if (index !== -1) {
+            DefaultRepository.notifyBots.splice(index, 1);
+        }
     }
 
     async initializeAllBots(): Promise<void> {
@@ -153,9 +189,13 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
-        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) }, { config: config })
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { config: config })
         const notifyBot: NotifyBot = this.getNotifyBot(botId)
         notifyBot.updateBotConfig(config)
+    }
+
+    async updateBot(botId: string, field: string, value: any): Promise<void> {
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { [field]: value })
     }
 
     getBotConfig(botId: string): NotifyBotConfig | null {
@@ -227,7 +267,7 @@ export class DefaultRepository extends DatabaseRepository {
 
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
         const norifyBot: NotifyBot = this.getNotifyBot(botId)
-        const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Groups, { botId: botId })
+        const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Groups, { [Fields.BotId]: botId })
         const groupInfoList: GroupInfo[] = await Promise.all(groups.map(async (group) => {
             const groupChat: GroupChat = await norifyBot.returnGroupById(group.groupId)
             return this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)

@@ -16,6 +16,10 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.post("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().createBot)
     // Rota responsável por deletar um bot
     fastify.delete("/bot/:id", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().deleteBot)
+    // Rota responsável por parar um bot
+    fastify.post("/bot/:id/stop", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().stopBot)
+    // Rota responsável por reiniciar um bot
+    fastify.post("/bot/:id/restart", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().restartBot)
     // Rota responsável por alterar as configurações do bot
     fastify.put("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().updateBotConfig)
     // Rota responsável por enviar uma mensagem com o bot
@@ -24,8 +28,8 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.post("/bot/:id/group/message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessageToGroup)
     // Rota responsável por retornar um bot
     fastify.get("/bot/:id", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().getBotById)
-     // Rota responsável por retornar todos os bots
-     fastify.get("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().getAllbots)
+    // Rota responsável por retornar todos os bots
+    fastify.get("/bot", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().getAllbots)
     // Rota responsável por criar um grupo
     fastify.post("/bot/:id/group", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().createGroup)
     // Rota responsável retornar um grupo pelo ID

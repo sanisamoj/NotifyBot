@@ -25,6 +25,18 @@ export class BotController {
         return reply.status(200).send()
     }
 
+    async stopBot(request: FastifyRequest, reply: FastifyReply) {
+        const { id } = request.params as { id: string }
+        await new BotService().stopBotById(id)
+        return reply.status(200).send()
+    }
+
+    async restartBot(request: FastifyRequest, reply: FastifyReply) {
+        const { id } = request.params as { id: string }
+        await new BotService().restartBotById(id)
+        return reply.status(200).send()
+    }
+
     async sendMessage(request: FastifyRequest, reply: FastifyReply) {
         const { id } = request.params as { id: string }
         const { phone, message } = request.body as any

@@ -1,3 +1,4 @@
+import { NotifyBot } from "../bots/NotifyBot"
 import { Config } from "../Config"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
@@ -26,6 +27,14 @@ export class BotService {
 
     async deleteBotById(id: string): Promise<void> {
         this.repository.deleteBot(id)
+    }
+
+    async stopBotById(botId: string): Promise<void> {
+        await this.repository.stopBot(botId)
+    }
+
+    async restartBotById(botId: string): Promise<void> {
+        await this.repository.initializeBot(botId)
     }
 
     async getBotById(id: string): Promise<BotInfo> {
