@@ -37,6 +37,14 @@ export class BotService {
         await this.repository.initializeBot(botId)
     }
 
+    async initializeEmergencyBots(): Promise<void> {
+        await this.repository.initializeEmergencyBots()
+    }
+
+    async stopEmergencyBots(): Promise<void> {
+        await this.repository.stopEmergencyBots()
+    }
+
     async getBotById(id: string): Promise<BotInfo> {
         return await this.repository.getBotById(id)
     }

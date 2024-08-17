@@ -2,9 +2,9 @@ import { DatabaseRepository } from "./data/models/interfaces/DatabaseRepository"
 import { DefaultRepository } from "./data/repository/DefaultRepository"
 
 export class Config {
-  static systemVersion: string = "0.8.2"
+  static systemVersion: string = "0.9.0"
   static SAVE_BOTS_FILE_PATH: string = "./savedBots"
-  static SAVE_VENOM_BOTS_FILE_PATH: string = "./savedVenomBots/tokens"
+  static SAVE_VENOM_BOTS_FILE_PATH: string = "./savedVenomBots"
 
   private static databaseRepository: DefaultRepository = new DefaultRepository()
 

@@ -1,4 +1,5 @@
 export enum NotifyQueues {
     NotifyBotMessages = "NotifyBotMessages",
-    NotifyBotStatus = "NotifyBotStatus"
+    NotifyBotStatus = "NotifyBotStatus",
+    NotifyServerBotsStatus = "NotifyServerBotsStatus"
 }

@@ -7,7 +7,7 @@ import { BotStatus } from '../../data/models/enums/BotStatus'
 import { BotCreateData } from '../../data/models/interfaces/BotCreateData'
 import { HandleMessageInfo } from '../../data/models/interfaces/HandleMessageInfo'
 import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
-import { NotifyBotService } from '../webjs/NotifyBotService'
+import { NotifyBotService } from '../services/NotifyBotService'
 
 export class NotifyVenomBot {
     id: string
@@ -17,7 +17,7 @@ export class NotifyVenomBot {
     profileImage: string | null = null
     qrCode: string | undefined = undefined
     private config: NotifyBotConfig | null = null
-    status: string = BotStatus.STARTED
+    status: string = BotStatus.EMERGENCY
 
     private client!: Whatsapp
     private superAdmins: string[]
@@ -68,12 +68,12 @@ export class NotifyVenomBot {
 
     private async onReady() {
         console.log(`Bot ${this.number} | Online ✅`)
-        console.log(await this.client.getHostDevice())
-        this.number = ""
+        const hostDevice: any = await this.client.getHostDevice()
+        this.number = hostDevice.id.user
         new NotifyBotService().setNumber(this.id, this.number)
 
-        this.status = BotStatus.ONLINE
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
+        this.status = BotStatus.EMERGENCY
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.EMERGENCY })
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
@@ -127,8 +127,8 @@ export class NotifyVenomBot {
 
     async destroy(): Promise<void> {
         await this.client.close()
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
-        const pathSave: string = path.join(Config.SAVE_VENOM_BOTS_FILE_PATH, `session-${this.id}`)
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        const pathSave: string = path.join(`${Config.SAVE_VENOM_BOTS_FILE_PATH}/tokens`, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {
             try {

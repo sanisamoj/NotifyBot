@@ -19,6 +19,9 @@ import { BotStatus } from "../models/enums/BotStatus"
 import { NotifyVenomBot } from "../../bots/venom/NotifyVenomBot"
 import { MongodbOperations } from "../../database/MongodbOperations"
 import { CollectionsInDb } from "../models/enums/CollectionsInDb"
+import { RabbitMQService } from "../../services/RabbitMQService"
+import { NotifyQueues } from "../models/enums/NotifyQueues"
+import { SendNotifyServerBotsStatus } from "../models/interfaces/SendNotifyServerBotsStatus"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -138,6 +141,12 @@ export class DefaultRepository extends DatabaseRepository {
         return notifyBot
     }
 
+    private getNotifyVenomBot(botId: string): NotifyVenomBot {
+        const notifyVenomBot: NotifyVenomBot | undefined = DefaultRepository.notifyVenomBots.find(element => element.id === botId)
+        if (!notifyVenomBot) { throw new Error(Errors.BotNotFound) }
+        return notifyVenomBot
+    }
+
     async deleteBot(id: string): Promise<void> {
         const index: number = DefaultRepository.notifyBots.findIndex(element => element.id === id)
         if (index !== -1) {
@@ -188,16 +197,13 @@ export class DefaultRepository extends DatabaseRepository {
                     config: bot.config
                 }
 
-                // const notifyBot: NotifyBot = new NotifyBot(botData)
-                // DefaultRepository.notifyBots.push(notifyBot)
-
-                const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
-                DefaultRepository.notifyVenomBots.push(notifyVenomBot)
+                const notifyBot: NotifyBot = new NotifyBot(botData)
+                DefaultRepository.notifyBots.push(notifyBot)
             }
         }))
     }
 
-    async initializeEmergencyVenomBots() {
+    async initializeEmergencyBots(): Promise<void> {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach(((bot: BotMongodb) => {
@@ -220,10 +226,24 @@ export class DefaultRepository extends DatabaseRepository {
         }))
 
         DefaultRepository.notifyBots = []
+        const sendNotifyServerBotsStatus: SendNotifyServerBotsStatus = { notifyBotsStatus: BotStatus.EMERGENCY }
+        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
+        await rabbitMQService.sendMessage<SendNotifyServerBotsStatus>(NotifyQueues.NotifyServerBotsStatus, sendNotifyServerBotsStatus)
     }
 
-    async stopEmergencyVenomBots() {
+    async stopEmergencyBots(): Promise<void> {
+        const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
+        allBotsInDb.forEach(((bot: BotMongodb) => {
+            if (bot.status !== BotStatus.DESTROYED) {
+                try {
+                    const notifyVenomBot: NotifyVenomBot = this.getNotifyVenomBot(bot._id.toString())
+                    notifyVenomBot.stop()
+                } catch (error) { }
+            }
+        }))
+
+        DefaultRepository.notifyVenomBots = []
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {

@@ -8,7 +8,7 @@ import { Errors } from '../../data/models/enums/Errors'
 import { NotifyBotConfig } from '../../data/models/interfaces/NotifyBotConfig'
 import { HandleMessageInfo } from '../../data/models/interfaces/HandleMessageInfo'
 import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
-import { NotifyBotService } from './NotifyBotService'
+import { NotifyBotService } from '../services/NotifyBotService'
 import { BotStatus } from '../../data/models/enums/BotStatus'
 
 export class NotifyBot {
