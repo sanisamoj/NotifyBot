@@ -231,6 +231,31 @@ export class DefaultRepository extends DatabaseRepository {
         await rabbitMQService.sendMessage<SendNotifyServerBotsStatus>(NotifyQueues.NotifyServerBotsStatus, sendNotifyServerBotsStatus)
     }
 
+    async initializeEmergencyBot(botId: string): Promise<void> {
+        const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
+        if (!botMongodb) { throw new Error(Errors.BotNotFound) }
+
+        if (botMongodb.status !== BotStatus.DESTROYED) {
+            const notifyBot: NotifyBot = this.getNotifyBot(botMongodb._id.toString())
+            notifyBot.stop()
+
+            const botData: BotCreateData = {
+                id: botMongodb._id.toString(),
+                name: botMongodb.name,
+                description: botMongodb.description,
+                profileImage: botMongodb.profileImageUrl,
+                admins: botMongodb.admins,
+                config: botMongodb.config
+            }
+
+            const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
+            DefaultRepository.notifyVenomBots.push(notifyVenomBot)
+
+            const index: number = DefaultRepository.notifyBots.findIndex(element => element.id === botMongodb._id.toString())
+            if (index !== -1) { DefaultRepository.notifyBots.splice(index, 1) }
+        }
+    }
+
     async stopEmergencyBots(): Promise<void> {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
@@ -244,6 +269,19 @@ export class DefaultRepository extends DatabaseRepository {
         }))
 
         DefaultRepository.notifyVenomBots = []
+    }
+
+    async stopEmergencyBot(botId: string): Promise<void> {
+        const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
+        if (!botMongodb) { throw new Error(Errors.BotNotFound) }
+
+        if (botMongodb.status !== BotStatus.DESTROYED) {
+            const notifyVenomBot: NotifyVenomBot = this.getNotifyVenomBot(botMongodb._id.toString())
+            notifyVenomBot.stop()
+
+            const index: number = DefaultRepository.notifyVenomBots.findIndex(element => element.id === botMongodb._id.toString())
+            if (index !== -1) { DefaultRepository.notifyVenomBots.splice(index, 1) }
+        }
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {

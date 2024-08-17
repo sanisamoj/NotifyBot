@@ -108,10 +108,9 @@ export class NotifyBot {
     // Performs the procedures for disconnection
     private async disconnect(reason: string) {
         console.log('Client was logged out', reason)
-        this.status = BotStatus.DESTROYED
+        this.status = BotStatus.OFFLINE
         this.qrCode = ""
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
-        this.destroy()
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
     }
 
     // Sends startup message to all admins
