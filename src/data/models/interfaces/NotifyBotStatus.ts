@@ -1,4 +1,4 @@
 export interface NotifyBotStatus {
     botId: string
-    active: boolean
+    status: string
 }

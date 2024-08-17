@@ -1,5 +1,6 @@
 export enum Fields {
     Id = "_id",
     Number = "number",
-    BotId =  "botId"
+    BotId =  "botId",
+    Status = "status"
 }

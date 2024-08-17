@@ -17,6 +17,7 @@ import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 import { GroupChat } from "whatsapp-web.js"
 import { NotifyBotConfig } from "../models/interfaces/NotifyBotConfig"
 import { Fields } from "../models/enums/Fields"
+import { BotStatus } from "../models/enums/BotStatus"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -68,6 +69,7 @@ export class DefaultRepository extends DatabaseRepository {
             profileImageUrl: createBotRequest.profileImage ?? "",
             admins: createBotRequest.admins,
             config: createBotRequest.config,
+            status: BotStatus.STARTED,
             createdAt: new Date().toDateString()
         }
 
@@ -109,7 +111,7 @@ export class DefaultRepository extends DatabaseRepository {
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
         const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
-        const qrCode: string = notifyBot?.qrCode ?? "undefined";
+        const qrCode: string = notifyBot?.qrCode ?? "undefined"
         const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
     
         const botInfo: BotInfo = {
@@ -121,7 +123,7 @@ export class DefaultRepository extends DatabaseRepository {
             qrCode: qrCode,
             groups: groups,
             config: botMongodb.config,
-            active: notifyBot?.active ?? false,
+            status: botMongodb.status,
             createdAt: botMongodb.createdAt
         }
     
@@ -173,18 +175,20 @@ export class DefaultRepository extends DatabaseRepository {
     async initializeAllBots(): Promise<void> {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
-        allBotsInDb.forEach((bot => {
-            const botData: BotCreateData = {
-                id: bot._id.toString(),
-                name: bot.name,
-                description: bot.description,
-                profileImage: bot.profileImageUrl,
-                admins: bot.admins,
-                config: bot.config
+        allBotsInDb.forEach(((bot: BotMongodb) => {
+            if(bot.status !== BotStatus.DESTROYED) {
+                const botData: BotCreateData = {
+                    id: bot._id.toString(),
+                    name: bot.name,
+                    description: bot.description,
+                    profileImage: bot.profileImageUrl,
+                    admins: bot.admins,
+                    config: bot.config
+                }
+    
+                const notifyBot: NotifyBot = new NotifyBot(botData)
+                DefaultRepository.notifyBots.push(notifyBot)
             }
-
-            const notifyBot: NotifyBot = new NotifyBot(botData)
-            DefaultRepository.notifyBots.push(notifyBot)
         }))
     }
 

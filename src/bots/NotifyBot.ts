@@ -6,10 +6,10 @@ import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } fr
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../data/models/enums/Errors'
 import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
-import { RabbitMQService } from '../services/RabbitMQService'
 import { HandleMessageInfo } from '../data/models/interfaces/HandleMessageInfo'
 import { NotifyBotStatus } from '../data/models/interfaces/NotifyBotStatus'
 import { NotifyBotService } from './NotifyBotService'
+import { BotStatus } from '../data/models/enums/BotStatus'
 
 export class NotifyBot {
     id: string
@@ -19,7 +19,7 @@ export class NotifyBot {
     profileImage: string | null = null
     qrCode: string | undefined = undefined
     private config: NotifyBotConfig | null = null
-    active: boolean = false
+    status: string = BotStatus.STARTED
 
     private client!: Client
     private superAdmins: string[]
@@ -55,18 +55,18 @@ export class NotifyBot {
         })
 
         this.client.on('disconnected', (reason) => {
-            this.disconnected(reason)
+            this.disconnect(reason)
         })
 
         this.client.on('change_state', (status: WAState) => {
             switch (status) {
                 case WAState.CONFLICT:
-                    this.active = false
-                    this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: false })
+                    this.status = BotStatus.OFFLINE
+                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
                     break
                 case WAState.CONNECTED:
-                    this.active = true
-                    this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: true })
+                    this.status = BotStatus.OFFLINE
+                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
                     break
                 default:
                     break
@@ -74,12 +74,10 @@ export class NotifyBot {
         })
 
         this.client.on('call', (call: Call) => {
-            if (this.config && this.config.callPermission === true) {
+            if (this.config && this.config.callPermission === false) {
                 try {
                     call.reject()
-                    if (this.config.callPermission) {
-                        this.client.sendMessage(call.from!!, this.config.automaticCallMessage!!)
-                    }
+                    this.client.sendMessage(call.from!!, this.config.automaticCallMessage!!)
                 } catch (error: any) { }
             }
         })
@@ -102,17 +100,17 @@ export class NotifyBot {
         this.number = this.client.info.wid.user
         new NotifyBotService().setNumber(this.id, this.number)
 
-        this.active = true
-        this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: true })
+        this.status = BotStatus.ONLINE
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
     // Performs the procedures for disconnection
-    private async disconnected(reason: string) {
+    private async disconnect(reason: string) {
         console.log('Client was logged out', reason)
-        this.active = false
+        this.status = BotStatus.DESTROYED
         this.qrCode = ""
-        this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: false })
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
         this.destroy()
     }
 
@@ -142,13 +140,13 @@ export class NotifyBot {
     }
 
     private async sendHandleMessageInfoToRabbitMQ(handleMessageInfo: HandleMessageInfo) {
-        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
-        await rabbitMQService.sendMessage(this.config?.queueRabbitMqHandleMessage!!, handleMessageInfo)
+        const notifyBotService: NotifyBotService = new NotifyBotService()
+        await notifyBotService.sendHandleMessageInfoToRabbitMQ(this.config?.queueRabbitMqHandleMessage!!, handleMessageInfo)
     }
 
-    private async sendNotifyBotStatusToRabbitMQ(notifyBotStatus: NotifyBotStatus) {
-        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
-        await rabbitMQService.sendMessage(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
+    private async setNotifyBotStatus(notifyBotStatus: NotifyBotStatus) {
+        const notifyBotService: NotifyBotService = new NotifyBotService()
+        await notifyBotService.setStatusAndNotifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
     }
 
     private isAdmin(messageFrom: string): boolean {
@@ -176,9 +174,8 @@ export class NotifyBot {
     // Destroy the bot and deletes cache
     async destroy(): Promise<void> {
         await this.client.destroy()
-        await new NotifyBotService().deleteBot(this.id)
-        this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: false })
-        const pathSave = path.join(Config.SAVE_BOTS_FILE_PATH, `session-${this.id}`)
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        const pathSave: string = path.join(Config.SAVE_BOTS_FILE_PATH, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {
             try {
@@ -194,7 +191,7 @@ export class NotifyBot {
     // Destroy the bot
     async stop(): Promise<void> {
         await this.client.destroy()
-        this.sendNotifyBotStatusToRabbitMQ({ botId: this.id, active: false })
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
     }
 
     // Send a message

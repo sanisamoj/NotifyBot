@@ -9,5 +9,6 @@ export interface BotMongodb {
     profileImageUrl: string
     admins: string[]
     config: NotifyBotConfig | null
+    status: string
     createdAt: string
 }

@@ -5,7 +5,7 @@ export class Config {
   static systemVersion: string = "0.8.2"
   static SAVE_BOTS_FILE_PATH: string = "./savedBots"
 
-  private static databaseRepository = new DefaultRepository()
+  private static databaseRepository: DefaultRepository = new DefaultRepository()
 
   static getDatabaseRepository(): DatabaseRepository {
     return Config.databaseRepository

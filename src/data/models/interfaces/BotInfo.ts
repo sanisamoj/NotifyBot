@@ -10,6 +10,6 @@ export interface BotInfo {
     qrCode: string
     groups: GroupInfo[]
     config: NotifyBotConfig | null
-    active: boolean
+    status: string,
     createdAt: string
 }
