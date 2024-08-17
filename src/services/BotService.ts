@@ -1,4 +1,4 @@
-import { NotifyBot } from "../bots/NotifyBot"
+import { NotifyBot } from "../bots/webjs/NotifyBot"
 import { Config } from "../Config"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"

@@ -4,6 +4,7 @@ import { DefaultRepository } from "./data/repository/DefaultRepository"
 export class Config {
   static systemVersion: string = "0.8.2"
   static SAVE_BOTS_FILE_PATH: string = "./savedBots"
+  static SAVE_VENOM_BOTS_FILE_PATH: string = "./savedVenomBots/tokens"
 
   private static databaseRepository: DefaultRepository = new DefaultRepository()
 

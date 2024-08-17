@@ -1,7 +1,7 @@
 import {Collection, Db, Document, MongoClient, WithId } from "mongodb"
-import { CollectionsInDb } from "./CollectionsInDb"
 import { Errors } from "../data/models/enums/Errors"
 import * as dotenv from 'dotenv'
+import { CollectionsInDb } from "../data/models/enums/CollectionsInDb"
 
 dotenv.config()
 

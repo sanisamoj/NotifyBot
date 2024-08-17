@@ -1,10 +1,10 @@
-import { Config } from "../Config"
-import { Fields } from "../data/models/enums/Fields"
-import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
-import { HandleMessageInfo } from "../data/models/interfaces/HandleMessageInfo"
-import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
-import { NotifyBotStatus } from "../data/models/interfaces/NotifyBotStatus"
-import { RabbitMQService } from "../services/RabbitMQService"
+import { Config } from "../../Config"
+import { Fields } from "../../data/models/enums/Fields"
+import { DatabaseRepository } from "../../data/models/interfaces/DatabaseRepository"
+import { HandleMessageInfo } from "../../data/models/interfaces/HandleMessageInfo"
+import { NotifyBotConfig } from "../../data/models/interfaces/NotifyBotConfig"
+import { NotifyBotStatus } from "../../data/models/interfaces/NotifyBotStatus"
+import { RabbitMQService } from "../../services/RabbitMQService"
 
 export class NotifyBotService {
     private repository: DatabaseRepository

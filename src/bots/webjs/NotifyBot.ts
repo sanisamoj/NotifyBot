@@ -1,15 +1,15 @@
 import * as fsExtra from 'fs-extra'
 import * as path from 'path'
-import { BotCreateData } from '../data/models/interfaces/BotCreateData'
-import { Config } from '../Config'
+import { BotCreateData } from '../../data/models/interfaces/BotCreateData'
+import { Config } from '../../Config'
 import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
-import { Errors } from '../data/models/enums/Errors'
-import { NotifyBotConfig } from '../data/models/interfaces/NotifyBotConfig'
-import { HandleMessageInfo } from '../data/models/interfaces/HandleMessageInfo'
-import { NotifyBotStatus } from '../data/models/interfaces/NotifyBotStatus'
+import { Errors } from '../../data/models/enums/Errors'
+import { NotifyBotConfig } from '../../data/models/interfaces/NotifyBotConfig'
+import { HandleMessageInfo } from '../../data/models/interfaces/HandleMessageInfo'
+import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
 import { NotifyBotService } from './NotifyBotService'
-import { BotStatus } from '../data/models/enums/BotStatus'
+import { BotStatus } from '../../data/models/enums/BotStatus'
 
 export class NotifyBot {
     id: string

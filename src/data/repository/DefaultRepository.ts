@@ -3,24 +3,26 @@ import { BotInfo } from "../models/interfaces/BotInfo"
 import { CreateBotRequest } from "../models/interfaces/CreateBotRequest"
 import { DatabaseRepository } from "../models/interfaces/DatabaseRepository"
 import { BotMongodb } from "../models/interfaces/BotMongodb"
-import { MongodbOperations } from "../../database/Mongodb"
-import { CollectionsInDb } from "../../database/CollectionsInDb"
 import { BotCreateData } from "../models/interfaces/BotCreateData"
 import { Errors } from "../models/enums/Errors"
 import { CreateGroupInfo } from "../models/interfaces/CreateGroupInfo"
 import { GroupInfo } from "../models/interfaces/GroupInfo"
 import { Group } from "../models/interfaces/Group"
 import { Participant } from "../models/interfaces/Participant"
-import { NotifyBot } from "../../bots/NotifyBot"
+import { NotifyBot } from "../../bots/webjs/NotifyBot"
 import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 import { GroupChat } from "whatsapp-web.js"
 import { NotifyBotConfig } from "../models/interfaces/NotifyBotConfig"
 import { Fields } from "../models/enums/Fields"
 import { BotStatus } from "../models/enums/BotStatus"
+import { NotifyVenomBot } from "../../bots/venom/NotifyVenomBot"
+import { MongodbOperations } from "../../database/MongodbOperations"
+import { CollectionsInDb } from "../models/enums/CollectionsInDb"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
+    private static notifyVenomBots: NotifyVenomBot[] = []
     private mongodb: MongodbOperations = new MongodbOperations()
 
     async initializeBot(botId: string): Promise<void> {
@@ -113,7 +115,7 @@ export class DefaultRepository extends DatabaseRepository {
         const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
         const qrCode: string = notifyBot?.qrCode ?? "undefined"
         const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
-    
+
         const botInfo: BotInfo = {
             id: botId,
             name: botMongodb.name,
@@ -126,7 +128,7 @@ export class DefaultRepository extends DatabaseRepository {
             status: botMongodb.status,
             createdAt: botMongodb.createdAt
         }
-    
+
         return botInfo
     }
 
@@ -176,7 +178,7 @@ export class DefaultRepository extends DatabaseRepository {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach(((bot: BotMongodb) => {
-            if(bot.status !== BotStatus.DESTROYED) {
+            if (bot.status !== BotStatus.DESTROYED) {
                 const botData: BotCreateData = {
                     id: bot._id.toString(),
                     name: bot.name,
@@ -185,11 +187,43 @@ export class DefaultRepository extends DatabaseRepository {
                     admins: bot.admins,
                     config: bot.config
                 }
-    
-                const notifyBot: NotifyBot = new NotifyBot(botData)
-                DefaultRepository.notifyBots.push(notifyBot)
+
+                // const notifyBot: NotifyBot = new NotifyBot(botData)
+                // DefaultRepository.notifyBots.push(notifyBot)
+
+                const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
+                DefaultRepository.notifyVenomBots.push(notifyVenomBot)
             }
         }))
+    }
+
+    async initializeEmergencyVenomBots() {
+        const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
+
+        allBotsInDb.forEach(((bot: BotMongodb) => {
+            if (bot.status !== BotStatus.DESTROYED) {
+                const notifyBot: NotifyBot = this.getNotifyBot(bot._id.toString())
+                notifyBot.stop()
+
+                const botData: BotCreateData = {
+                    id: bot._id.toString(),
+                    name: bot.name,
+                    description: bot.description,
+                    profileImage: bot.profileImageUrl,
+                    admins: bot.admins,
+                    config: bot.config
+                }
+
+                const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
+                DefaultRepository.notifyVenomBots.push(notifyVenomBot)
+            }
+        }))
+
+        DefaultRepository.notifyBots = []
+    }
+
+    async stopEmergencyVenomBots() {
+
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
