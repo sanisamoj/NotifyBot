@@ -108,10 +108,10 @@ export class DefaultRepository extends DatabaseRepository {
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
-        const notifyBot: NotifyBot = this.getNotifyBot(botId)
-        const qrCode: string = notifyBot.qrCode ?? "undefined"
+        const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
+        const qrCode: string = notifyBot?.qrCode ?? "undefined";
         const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
-
+    
         const botInfo: BotInfo = {
             id: botId,
             name: botMongodb.name,
@@ -121,10 +121,10 @@ export class DefaultRepository extends DatabaseRepository {
             qrCode: qrCode,
             groups: groups,
             config: botMongodb.config,
-            active: notifyBot.active,
+            active: notifyBot?.active ?? false,
             createdAt: botMongodb.createdAt
         }
-
+    
         return botInfo
     }
 
