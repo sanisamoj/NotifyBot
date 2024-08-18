@@ -93,18 +93,37 @@ export class NotifyVenomBot {
 
     private async onHandleMessages(client: Whatsapp) {
         client.onMessage(async (message: Message) => {
-            if (this.config) {
-                if (this.config.automaticMessage != null && this.config.automaticMessagePermission) {
-                    await client.sendText(message.from, this.config.automaticMessage)
-                }
-
-                if (this.config.queueRabbitMqHandleMessage) {
-                    const from: string = message.from.replace("@c.us", "")
-                    const handleMessageInfo: HandleMessageInfo = { botId: this.id, from: from, message: message.body }
-                    await this.sendHandleMessageInfoToRabbitMQ(handleMessageInfo)
-                }
+            if (!this.config) return
+    
+            const isGroup: boolean = this.isGroupMessage(message)
+    
+            // Sending automatic messages
+            if (this.config.automaticMessagePermission && this.config.automaticMessage) {
+                await client.sendText(message.from, this.config.automaticMessage)
+            }
+    
+            // Sending messages to RabbitMQ
+            if (this.config.queueRabbitMqHandleMessage) {
+                const handleMessageInfo: HandleMessageInfo = this.createHandleMessageInfo(message, isGroup)
+                await this.sendHandleMessageInfoToRabbitMQ(handleMessageInfo)
             }
         })
+    }
+
+    private createHandleMessageInfo(message: Message, isGroup: boolean): HandleMessageInfo {
+        const from: string = isGroup && message.author ? message.author.replace("@c.us", "") : message.from.replace("@c.us", "")
+        const groupId: string | null = isGroup ? message.from.replace("@g.us", "") : null
+    
+        return {
+            botId: this.id,
+            groupId: groupId,
+            from: from,
+            message: message.body
+        }
+    }
+
+    private isGroupMessage(message: Message): boolean {
+        return (message.from.search('@g') === -1) ? false : true
     }
 
     private async sendHandleMessageInfoToRabbitMQ(handleMessageInfo: HandleMessageInfo) {

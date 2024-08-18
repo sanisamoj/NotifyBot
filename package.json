@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npx tsc",
     "deploy": "node build/server.js",
+    "clean": "tsc --build --clean",
     "dev": "ts-node-dev src/server.ts"
   },
   "keywords": [],

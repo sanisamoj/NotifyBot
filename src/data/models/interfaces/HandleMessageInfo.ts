@@ -1,5 +1,6 @@
 export interface HandleMessageInfo {
     botId: string
-    from: string;
-    message: string;
+    groupId: string | null
+    from: string
+    message: string
 }

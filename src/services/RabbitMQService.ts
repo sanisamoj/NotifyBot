@@ -24,7 +24,7 @@ export class RabbitMQService {
 
     public async sendMessage<T>(queueName: string, message: T) {
         await this.channel.assertQueue(queueName, { durable: true })
-        const messageJson = JSON.stringify(message)
+        const messageJson: string = JSON.stringify(message)
         this.channel.sendToQueue(queueName, Buffer.from(messageJson), { persistent: true })
     }
 

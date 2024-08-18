@@ -37,7 +37,6 @@ Config.initializeAllBots()
 
 process.on('uncaughtException', (error, origin) => {
     console.log(`\n${origin} signal received. \n${error}`)
-    
 })
 
 process.on('unhandledRejection', (error) => {
@@ -47,16 +46,15 @@ process.on('unhandledRejection', (error) => {
 process.on('SIGINT', async () => {
     try {
         await Config.stopAllBots()
-        console.log('Todos os bots foram fechados.')
     } catch (error) {
-        console.error('Erro ao fechar os bots:', error)
+        console.error(error)
     } finally {
         process.exit()
     }
 })
 
 process.on('SIGTERM', () => {
-    console.log('Encerrando aplicação!')
+    console.log('Closing application!')
     process.exit()
 })
 

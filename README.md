@@ -13,22 +13,25 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
 ## Funcionalidades do Sistema
 
 - Criar ou destruir bots.
+- Substituir API de automação do whatsapp.
 - Gerenciar bots.
-    - Retornar bots.
-    - Retornar participantes dos grupos.
-    - Gerenciamento das configurações de cada bot.
+- Retornar informações de bots.
+- Gerenciar Grupos.
+- Reiniciar e parar bots.
 
 ## Tecnologias e Ferramentas Utilizadas
 
 - Backend: **Fastify (Typescript)**.
 - Banco de dados: **Mongodb** - Para armazenamento de dados sensíveis.
 - API para controle de bot: [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js).
+- Para comunicação de eventos: RabbitMQ.
 
 ## Para a instalação
 Para instalar o projeto para testes, utilizaremos o Docker.
 
 - Instale a última versão do **Docker** em sua máquina.
 - Instale o mongodb (Verifique na página oficial, ou monte uma imagem com o Docker).
+- Instale o rabbitmq (Verifique na página oficial, ou monte uma imagem com o Docker).
 - Crie um arquivo .env, ou adicione um arquivo .env manualmente na construção da imagem docker.
 
 ```.env
