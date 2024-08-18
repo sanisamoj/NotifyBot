@@ -1,5 +1,6 @@
-import { NotifyBot } from "../bots/webjs/NotifyBot"
 import { Config } from "../Config"
+import { BotStatus } from "../data/models/enums/BotStatus"
+import { NotifyQueues } from "../data/models/enums/NotifyQueues"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
@@ -11,7 +12,9 @@ import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
 import { PaginationResponse } from "../data/models/interfaces/PaginationResponse"
 import { SendMessageInfo } from "../data/models/interfaces/SendMessageInfo"
 import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest"
+import { SendNotifyServerBotsStatus } from "../data/models/interfaces/SendNotifyServerBotsStatus"
 import { paginationMethod } from "../utils/paginationMethod"
+import { RabbitMQService } from "./RabbitMQService"
 
 export class BotService {
     private repository: DatabaseRepository
@@ -39,6 +42,13 @@ export class BotService {
 
     async initializeEmergencyBots(): Promise<void> {
         await this.repository.initializeEmergencyBots()
+        this.emitEmergencySignal()
+    }
+
+    async emitEmergencySignal() {
+        const sendNotifyServerBotsStatus: SendNotifyServerBotsStatus = { notifyBotsStatus: BotStatus.EMERGENCY }
+        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
+        await rabbitMQService.sendMessage<SendNotifyServerBotsStatus>(NotifyQueues.NotifyServerBotsStatus, sendNotifyServerBotsStatus)
     }
 
     async initializeEmergencyBot(botId: string): Promise<void> {

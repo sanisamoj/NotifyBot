@@ -59,14 +59,15 @@ export class NotifyBot {
         })
 
         this.client.on('change_state', (status: WAState) => {
+            console.log(`Status: ${status}`)
             switch (status) {
                 case WAState.CONFLICT:
-                    this.status = BotStatus.OFFLINE
-                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+                    this.status = BotStatus.CONFLICT
+                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.CONFLICT })
                     break
                 case WAState.CONNECTED:
-                    this.status = BotStatus.OFFLINE
-                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+                    this.status = BotStatus.ONLINE
+                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
                     break
                 default:
                     break
@@ -146,20 +147,6 @@ export class NotifyBot {
     private async setNotifyBotStatus(notifyBotStatus: NotifyBotStatus) {
         const notifyBotService: NotifyBotService = new NotifyBotService()
         await notifyBotService.setStatusAndNotifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
-    }
-
-    private isAdmin(messageFrom: string): boolean {
-        const phone: string = messageFrom.replace("@c.us", "")
-        if (this.superAdmins.includes(phone)) {
-            return true
-        } else { return false }
-    }
-
-    private amI(messageFrom: string): boolean {
-        const phone: string = messageFrom.replace("@c.us", "")
-        if (phone === this.number) {
-            return true
-        } else { return false }
     }
 
     updateBotConfig(notifyBotConfig: NotifyBotConfig | null): void {

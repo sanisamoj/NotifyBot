@@ -19,9 +19,6 @@ import { BotStatus } from "../models/enums/BotStatus"
 import { NotifyVenomBot } from "../../bots/venom/NotifyVenomBot"
 import { MongodbOperations } from "../../database/MongodbOperations"
 import { CollectionsInDb } from "../models/enums/CollectionsInDb"
-import { RabbitMQService } from "../../services/RabbitMQService"
-import { NotifyQueues } from "../models/enums/NotifyQueues"
-import { SendNotifyServerBotsStatus } from "../models/interfaces/SendNotifyServerBotsStatus"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
@@ -226,9 +223,6 @@ export class DefaultRepository extends DatabaseRepository {
         }))
 
         DefaultRepository.notifyBots = []
-        const sendNotifyServerBotsStatus: SendNotifyServerBotsStatus = { notifyBotsStatus: BotStatus.EMERGENCY }
-        const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
-        await rabbitMQService.sendMessage<SendNotifyServerBotsStatus>(NotifyQueues.NotifyServerBotsStatus, sendNotifyServerBotsStatus)
     }
 
     async initializeEmergencyBot(botId: string): Promise<void> {
