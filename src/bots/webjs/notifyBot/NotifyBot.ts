@@ -135,7 +135,7 @@ export class NotifyBot {
             const isGroup: boolean = this.isGroupMessage(message)
     
             // Sending automatic messages
-            if (this.config.automaticMessagePermission && this.config.automaticMessage) {
+            if (!isGroup && this.config.automaticMessagePermission && this.config.automaticMessage) {
                 await client.sendMessage(message.from, this.config.automaticMessage)
             }
     

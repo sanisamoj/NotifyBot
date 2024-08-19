@@ -3,6 +3,7 @@ import fs from 'fs'
 import * as dotenv from 'dotenv'
 import { AddressResponse } from "../data/interfaces/AddresResponse"
 import { WeatherResultResponse } from "../data/interfaces/WeatherResultResponse"
+import path from 'path'
 dotenv.config()
 
 export class MeduzaApiService {
@@ -51,11 +52,13 @@ export class MeduzaApiService {
     }
 
     async sendSticker(): Promise<string> {
-        const stickers: string[] = fs.readdirSync(__dirname + '/stickers')
+        const filePath: string = path.join(__dirname, "..", "/stickers")
+        const stickers: string[] = fs.readdirSync(filePath)
         return stickers[Math.floor(Math.random() * stickers.length)]
     }
 
     contextText(mensagemAnormalized: string): string {
+        console.log(mensagemAnormalized)
         const normalizedMessage = mensagemAnormalized.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase()
 
         const messageMap = new Map<string, string[]>([

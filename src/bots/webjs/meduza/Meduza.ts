@@ -230,12 +230,12 @@ export class Meduza {
                         await message.reply('*Valor alterado! 😊*')
                         break
                     case normalizedText.slice(0, 8) == '/message' && messageFromAdmin == true:
-                        const value_possible: number = parseInt(message.body.slice(10).replaceAll(' ', '')) || 6
+                        const value_possible: number = parseInt(message.body.slice(9).replaceAll(' ', '')) || 6
                         this.setPossibleMessage(chat.id.user, value_possible)
                         await message.reply('*Valor alterado! 😊*')
                         break
                     case normalizedText.slice(0, 5) == '/chat' && messageFromAdmin == true:
-                        const valueChat: boolean = message.body.slice(5).replaceAll(" ", "") === "on"
+                        const valueChat: boolean = message.body.slice(6).replaceAll(" ", "") === "on"
                         this.setPossibleChat(chat.id.user, valueChat)
                         await message.reply('*Valor alterado! 😊*')
                         break
@@ -266,7 +266,7 @@ export class Meduza {
 
                 if (possibleToSendSticker === 0 && message.body.search('/') === -1 && groupInMemory.chat) {
                     const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new MeduzaApiService().sendSticker()}`))
-                    return await chat.sendMessage(sticker, { sendMediaAsSticker: true })
+                    await chat.sendMessage(sticker, { sendMediaAsSticker: true })
                 }
 
                 if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
@@ -276,7 +276,7 @@ export class Meduza {
                         ? meduzaRepo.contextText('MIDIA')
                         : meduzaRepo.contextText(normalizedText)
 
-                    await chat.sendMessage(answer || answer)
+                    await chat.sendMessage(answer)
                 }
 
             } else {
