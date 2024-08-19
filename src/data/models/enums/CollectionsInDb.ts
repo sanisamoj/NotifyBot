@@ -1,5 +1,6 @@
 export enum CollectionsInDb {
     Groups = "Groups",
     Bots = "Bots",
-    Users = "Users"
+    Users = "Users",
+    MeduzaGroups = "MeduzaGroups"
 }

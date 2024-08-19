@@ -6,10 +6,10 @@ import { BotCreateData } from "../../../data/models/interfaces/BotCreateData"
 import { NotifyBotConfig } from "../../../data/models/interfaces/NotifyBotConfig"
 import { NotifyBotService } from "../../services/NotifyBotService"
 import { NotifyBotStatus } from "../../../data/models/interfaces/NotifyBotStatus"
-import { MeduzaGroup } from "../../../data/models/interfaces/MeduzaGroup"
-import { MeduzaRepository } from "./MeduzaRepository"
+import { MeduzaGroup } from "./data/interfaces/MeduzaGroup"
 import path from 'path'
 import * as fsExtra from 'fs-extra'
+import { MeduzaApiService } from "./services/MeduzaApiService"
 
 export class Meduza {
     id: string
@@ -44,7 +44,7 @@ export class Meduza {
         const timeout: number = 120000
         const timeoutId = setTimeout(async () => {
             console.log('O QR Code não foi escaneado a tempo. Fechando o navegador...')
-            await this.client.destroy()
+            await this.destroy()
         }, timeout)
 
         this.client.on('qr', (qr: string) => {
@@ -180,21 +180,21 @@ export class Meduza {
                         if (searchCep == '' || searchCep.includes('-')) {
                             await message.reply("Percebi algo diferente, tenta assim: */Cep 04163050*")
                         } else {
-                            const cep: string = await new MeduzaRepository().cep(searchCep)
+                            const cep: string = await new MeduzaApiService().cep(searchCep)
                             await message.reply(cep)
                         }
                         break
                     case normalizedText.slice(0, 7) == '/climas':
-                        const climate: string = await new MeduzaRepository().everyDayWeather(normalizedText)
+                        const climate: string = await new MeduzaApiService().everyDayWeather(normalizedText)
                         await message.reply(climate)
                         break
                     case normalizedText.search('clima') != -1 && normalizedText.search('/') == -1:
-                        const simpleClimate: string = await new MeduzaRepository().apiWeather()
+                        const simpleClimate: string = await new MeduzaApiService().apiWeather()
                         await message.reply(simpleClimate)
                         break
                     case normalizedText.slice(0, 9) == '/noticias':
                         try {
-                            const news: any = await new MeduzaRepository().apiNews(message.body.slice(10))
+                            const news: any = await new MeduzaApiService().apiNews(message.body.slice(10))
                             if (news.linkImg == null) {
                                 await chat.sendMessage(news.txt)
                             } else {
@@ -265,12 +265,12 @@ export class Meduza {
                 const possibleToSendMessage: number = Math.floor(Math.random() * groupInMemory.possibleMessage)
 
                 if (possibleToSendSticker === 0 && message.body.search('/') === -1 && groupInMemory.chat) {
-                    const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new MeduzaRepository().sendSticker()}`))
+                    const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new MeduzaApiService().sendSticker()}`))
                     return await chat.sendMessage(sticker, { sendMediaAsSticker: true })
                 }
 
                 if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
-                    const meduzaRepo = new MeduzaRepository();
+                    const meduzaRepo = new MeduzaApiService();
 
                     const answer = message.hasMedia
                         ? meduzaRepo.contextText('MIDIA')
@@ -308,7 +308,7 @@ export class Meduza {
         })
 
         if (founded === undefined) {
-            const newGroup: MeduzaGroup = { groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
+            const newGroup: MeduzaGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
             this.meduzaGroups.push(newGroup)
             return newGroup
         }

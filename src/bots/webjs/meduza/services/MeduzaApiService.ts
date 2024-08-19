@@ -1,11 +1,11 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios"
 import fs from 'fs'
 import * as dotenv from 'dotenv'
-import { WeatherResultResponse } from "./@types/WeatherResultResponse";
-import { AddressResponse } from "./@types/AddresResponse";
+import { AddressResponse } from "../data/interfaces/AddresResponse"
+import { WeatherResultResponse } from "../data/interfaces/WeatherResultResponse"
 dotenv.config()
 
-export class MeduzaRepository {
+export class MeduzaApiService {
     
     private api: AxiosInstance
 
