@@ -98,7 +98,7 @@ export class NotifyVenomBot {
             const isGroup: boolean = this.isGroupMessage(message)
     
             // Sending automatic messages
-            if (this.config.automaticMessagePermission && this.config.automaticMessage) {
+            if (!isGroup && this.config.automaticMessagePermission && this.config.automaticMessage) {
                 await client.sendText(message.from, this.config.automaticMessage)
             }
     
