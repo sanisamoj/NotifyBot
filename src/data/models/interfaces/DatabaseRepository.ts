@@ -7,7 +7,7 @@ import { NotifyBotConfig } from "./NotifyBotConfig"
 import { SendMessageInfo } from "./SendMessageInfo"
 
 export abstract class DatabaseRepository {
-    abstract initializeBot(botId: string): Promise<void>
+    abstract initializeBot(botId: string): Promise<BotInfo>
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
     abstract getBotById(id: string): Promise<BotInfo>
     abstract getAllBots(): Promise<BotInfo[]>

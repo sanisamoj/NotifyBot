@@ -1,19 +1,19 @@
 import * as fsExtra from 'fs-extra'
 import * as path from 'path'
-import { BotCreateData } from '../../data/models/interfaces/BotCreateData'
-import { Config } from '../../Config'
+import { BotCreateData } from '../../../data/models/interfaces/BotCreateData'
+import { Config } from '../../../Config'
 import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
-import { Errors } from '../../data/models/enums/Errors'
-import { NotifyBotConfig } from '../../data/models/interfaces/NotifyBotConfig'
-import { HandleMessageInfo } from '../../data/models/interfaces/HandleMessageInfo'
-import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
-import { NotifyBotService } from '../services/NotifyBotService'
-import { BotStatus } from '../../data/models/enums/BotStatus'
+import { Errors } from '../../../data/models/enums/Errors'
+import { NotifyBotConfig } from '../../../data/models/interfaces/NotifyBotConfig'
+import { HandleMessageInfo } from '../../../data/models/interfaces/HandleMessageInfo'
+import { NotifyBotStatus } from '../../../data/models/interfaces/NotifyBotStatus'
+import { NotifyBotService } from '../../services/NotifyBotService'
+import { BotStatus } from '../../../data/models/enums/BotStatus'
 
 export class NotifyBot {
     id: string
-    name: string;
+    name: string
     description: string
     number: string = ""
     profileImage: string | null = null
@@ -40,12 +40,19 @@ export class NotifyBot {
             })
         })
 
+        const timeout: number = 120000
+        const timeoutId = setTimeout(async () => {
+            console.log('O QR Code não foi escaneado a tempo. Fechando o navegador...')
+            await this.destroy()
+        }, timeout)
+
         this.client.on('qr', (qr: string) => {
             qrcode.generate(qr, { small: true })
             this.qrCode = qr
         })
 
         this.client.on('ready', () => {
+            clearTimeout(timeoutId)
             this.onReady()
         })
 
@@ -109,9 +116,9 @@ export class NotifyBot {
     // Performs the procedures for disconnection
     private async disconnect(reason: string) {
         console.log('Client was logged out', reason)
-        this.status = BotStatus.OFFLINE
+        this.status = BotStatus.DESTROYED
         this.qrCode = ""
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
     }
 
     // Sends startup message to all admins

@@ -9,7 +9,7 @@ import { CreateGroupInfo } from "../models/interfaces/CreateGroupInfo"
 import { GroupInfo } from "../models/interfaces/GroupInfo"
 import { Group } from "../models/interfaces/Group"
 import { Participant } from "../models/interfaces/Participant"
-import { NotifyBot } from "../../bots/webjs/NotifyBot"
+import { NotifyBot } from "../../bots/webjs/notifyBot/NotifyBot"
 import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
 import { GroupChat } from "whatsapp-web.js"
@@ -19,13 +19,16 @@ import { BotStatus } from "../models/enums/BotStatus"
 import { NotifyVenomBot } from "../../bots/venom/NotifyVenomBot"
 import { MongodbOperations } from "../../database/MongodbOperations"
 import { CollectionsInDb } from "../models/enums/CollectionsInDb"
+import { BotType } from "../models/enums/BotType"
+import { Meduza } from "../../bots/webjs/meduza/Meduza"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
     private static notifyVenomBots: NotifyVenomBot[] = []
+    private static meduzaBots: Meduza[] = []
     private mongodb: MongodbOperations = new MongodbOperations()
 
-    async initializeBot(botId: string): Promise<void> {
+    async initializeBot(botId: string): Promise<BotInfo> {
         const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
         if (!botMongodb) { throw new Error(Errors.BotNotFound) }
 
@@ -38,27 +41,22 @@ export class DefaultRepository extends DatabaseRepository {
             config: botMongodb.config
         }
 
-        const notifyBot: NotifyBot = new NotifyBot(botData)
-        DefaultRepository.notifyBots.push(notifyBot)
+        if(botMongodb.botType === BotType.NOTIFY_BOT) {
+            const notifyBot: NotifyBot = new NotifyBot(botData)
+            DefaultRepository.notifyBots.push(notifyBot)
+
+        } else {
+            const meduzaBot: Meduza = new Meduza(botData)
+            DefaultRepository.meduzaBots.push(meduzaBot)
+        }
+
+        return this.botInfoFactory(botMongodb)
     }
 
     async registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo> {
         const botMongodb: BotMongodb = this.botMongodbFactory(createBotRequest)
         await this.mongodb.register<BotMongodb>(CollectionsInDb.Bots, botMongodb)
-
-        let botData: BotCreateData = {
-            id: botMongodb._id.toString(),
-            name: createBotRequest.name,
-            description: createBotRequest.description,
-            profileImage: createBotRequest.profileImage,
-            admins: createBotRequest.admins,
-            config: createBotRequest.config
-        }
-
-        const notifyBot: NotifyBot = new NotifyBot(botData)
-        DefaultRepository.notifyBots.push(notifyBot)
-
-        return this.botInfoFactory(botMongodb)
+        return await this.initializeBot(botMongodb._id.toString())
     }
 
     private botMongodbFactory(createBotRequest: CreateBotRequest): BotMongodb {
@@ -71,6 +69,7 @@ export class DefaultRepository extends DatabaseRepository {
             profileImageUrl: createBotRequest.profileImage ?? "",
             admins: createBotRequest.admins,
             config: createBotRequest.config,
+            botType: createBotRequest.botType,
             status: BotStatus.STARTED,
             createdAt: new Date().toDateString()
         }
@@ -112,8 +111,15 @@ export class DefaultRepository extends DatabaseRepository {
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
-        const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
-        const qrCode: string = notifyBot?.qrCode ?? "undefined"
+        let bot: NotifyBot | Meduza | undefined
+
+        if(botMongodb.botType === BotType.NOTIFY_BOT) {
+            bot = DefaultRepository.notifyBots.find(element => element.id === botId)
+        } else {
+            bot = DefaultRepository.meduzaBots.find(element => element.id === botId)
+        }
+
+        const qrCode: string = bot?.qrCode ?? "undefined"
         const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
 
         const botInfo: BotInfo = {
@@ -125,6 +131,7 @@ export class DefaultRepository extends DatabaseRepository {
             qrCode: qrCode,
             groups: groups,
             config: botMongodb.config,
+            botType: botMongodb.botType,
             status: botMongodb.status,
             createdAt: botMongodb.createdAt
         }
@@ -194,8 +201,7 @@ export class DefaultRepository extends DatabaseRepository {
                     config: bot.config
                 }
 
-                const notifyBot: NotifyBot = new NotifyBot(botData)
-                DefaultRepository.notifyBots.push(notifyBot)
+                this.initializeBot(bot._id.toString())
             }
         }))
     }
@@ -356,10 +362,20 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
-        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
+        if (!botMongodb) { throw new Error(Errors.BotNotFound) }
+        let bot: NotifyBot | Meduza | undefined
+
+        if(botMongodb.botType === BotType.NOTIFY_BOT) {
+            bot = DefaultRepository.notifyBots.find(element => element.id === botId)
+        } else {
+            bot = DefaultRepository.meduzaBots.find(element => element.id === botId)
+        }
+        if (!bot) { throw new Error(Errors.BotNotFound) }
+        
         const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Groups, { [Fields.BotId]: botId })
         const groupInfoList: GroupInfo[] = await Promise.all(groups.map(async (group) => {
-            const groupChat: GroupChat = await norifyBot.returnGroupById(group.groupId)
+            const groupChat: GroupChat = await bot.returnGroupById(group.groupId)
             return this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)
         }))
 

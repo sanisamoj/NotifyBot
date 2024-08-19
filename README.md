@@ -10,6 +10,14 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
     - Enviar mensagens aos grupos.
     - Adicionar/Remover participantes dos grupos .
 
+
+## Funcionadades do Bot Meduza
+
+- Interagir em grupos
+- Marca todos de um grupo
+- Sorteia um usuário do grupo
+- Retorna climas e notícias
+
 ## Funcionalidades do Sistema
 
 - Criar ou destruir bots.
@@ -44,6 +52,10 @@ RABBITMQ_HOST=amqp://localhost:5672
 ADMIN_SECRET_KEY=JWT_SECRET_KEY
 ADMIN_USENAME=admin
 ADMIN_PASSWORD=admin
+
+#Meduza Bot
+API_KEY_NEWS=
+API_KEY_CLIMA=
 ```
 > Se você estiver expondo a porta do MongoDB no Docker, é necessário alterar o valor da variável **MONGO_HOST** para __mongodb://host.docker.internal:27017__.
 

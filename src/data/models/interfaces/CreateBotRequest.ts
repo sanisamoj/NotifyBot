@@ -6,4 +6,5 @@ export interface CreateBotRequest {
     profileImage: string | null
     admins: string[]
     config: NotifyBotConfig | null
+    botType: string
 }
