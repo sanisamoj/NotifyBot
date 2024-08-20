@@ -20,12 +20,12 @@ import { NotifyVenomBot } from "../../bots/venom/NotifyVenomBot"
 import { MongodbOperations } from "../../database/MongodbOperations"
 import { CollectionsInDb } from "../models/enums/CollectionsInDb"
 import { BotType } from "../models/enums/BotType"
-import { Meduza } from "../../bots/webjs/meduza/Meduza"
+import { PromoterBot } from "../../bots/webjs/promoterBot/PromoterBot"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: NotifyBot[] = []
     private static notifyVenomBots: NotifyVenomBot[] = []
-    private static meduzaBots: Meduza[] = []
+    private static promoterBots: PromoterBot[] = []
     private mongodb: MongodbOperations = new MongodbOperations()
 
     async initializeBot(botId: string): Promise<BotInfo> {
@@ -46,8 +46,8 @@ export class DefaultRepository extends DatabaseRepository {
             DefaultRepository.notifyBots.push(notifyBot)
 
         } else {
-            const meduzaBot: Meduza = new Meduza(botData)
-            DefaultRepository.meduzaBots.push(meduzaBot)
+            const promoterBot: PromoterBot = new PromoterBot(botData)
+            DefaultRepository.promoterBots.push(promoterBot)
         }
 
         return this.botInfoFactory(botMongodb)
@@ -111,12 +111,12 @@ export class DefaultRepository extends DatabaseRepository {
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
-        let bot: NotifyBot | Meduza | undefined
+        let bot: NotifyBot | PromoterBot | undefined
 
         if(botMongodb.botType === BotType.NOTIFY_BOT) {
             bot = DefaultRepository.notifyBots.find(element => element.id === botId)
         } else {
-            bot = DefaultRepository.meduzaBots.find(element => element.id === botId)
+            bot = DefaultRepository.promoterBots.find(element => element.id === botId)
         }
 
         const qrCode: string = bot?.qrCode ?? "undefined"
@@ -364,12 +364,12 @@ export class DefaultRepository extends DatabaseRepository {
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
         const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
         if (!botMongodb) { throw new Error(Errors.BotNotFound) }
-        let bot: NotifyBot | Meduza | undefined
+        let bot: NotifyBot | PromoterBot | undefined
 
         if(botMongodb.botType === BotType.NOTIFY_BOT) {
             bot = DefaultRepository.notifyBots.find(element => element.id === botId)
         } else {
-            bot = DefaultRepository.meduzaBots.find(element => element.id === botId)
+            bot = DefaultRepository.promoterBots.find(element => element.id === botId)
         }
         if (!bot) { throw new Error(Errors.BotNotFound) }
         

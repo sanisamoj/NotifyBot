@@ -11,7 +11,7 @@ Tem como objetivo de gerenciar bots que servem para notificar usuários, criar g
     - Adicionar/Remover participantes dos grupos .
 
 
-## Funcionadades do Bot Meduza
+## Funcionadades do Bot Promoter
 
 - Interagir em grupos
 - Marca todos de um grupo
@@ -53,7 +53,7 @@ ADMIN_SECRET_KEY=JWT_SECRET_KEY
 ADMIN_USENAME=admin
 ADMIN_PASSWORD=admin
 
-#Meduza Bot
+#Promoter Bot
 API_KEY_NEWS=
 API_KEY_CLIMA=
 ```

@@ -1,4 +1,4 @@
-export interface MeduzaGroup{
+export interface PromoterGroup{
     botId: string
     groupId: string
     possibleMessagesticker: number

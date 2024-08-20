@@ -6,12 +6,12 @@ import { BotCreateData } from "../../../data/models/interfaces/BotCreateData"
 import { NotifyBotConfig } from "../../../data/models/interfaces/NotifyBotConfig"
 import { NotifyBotService } from "../../services/NotifyBotService"
 import { NotifyBotStatus } from "../../../data/models/interfaces/NotifyBotStatus"
-import { MeduzaGroup } from "./data/interfaces/MeduzaGroup"
 import path from 'path'
 import * as fsExtra from 'fs-extra'
-import { MeduzaApiService } from "./services/MeduzaApiService"
+import { PromoterBotApiService } from "./services/PromoterBotApiService"
+import { PromoterGroup } from "./data/interfaces/MeduzaGroup"
 
-export class Meduza {
+export class PromoterBot {
     id: string
     name: string
     description: string
@@ -23,7 +23,7 @@ export class Meduza {
 
     private client!: Client
     private superAdmins: string[]
-    private meduzaGroups: MeduzaGroup[] = []
+    private PromoterGroups: PromoterGroup[] = []
 
     constructor(botData: BotCreateData) {
         this.id = botData.id
@@ -136,7 +136,7 @@ export class Meduza {
             if (isGroup) {
                 const chat: GroupChat = await message.getChat() as GroupChat
                 const participants: GroupParticipant[] = chat.participants
-                const groupInMemory: MeduzaGroup = this.getGroupInfoInMemory(chat.id.user)
+                const groupInMemory: PromoterGroup = this.getGroupInfoInMemory(chat.id.user)
                 const messageFromAdmin: boolean = this.isAdminFromThe(participants, message.author!!)
                 const normalizedText: string = this.normalizedMessage(message.body)
 
@@ -180,21 +180,21 @@ export class Meduza {
                         if (searchCep == '' || searchCep.includes('-')) {
                             await message.reply("Percebi algo diferente, tenta assim: */Cep 04163050*")
                         } else {
-                            const cep: string = await new MeduzaApiService().cep(searchCep)
+                            const cep: string = await new PromoterBotApiService().cep(searchCep)
                             await message.reply(cep)
                         }
                         break
                     case normalizedText.slice(0, 7) == '/climas':
-                        const climate: string = await new MeduzaApiService().everyDayWeather(normalizedText)
+                        const climate: string = await new PromoterBotApiService().everyDayWeather(normalizedText)
                         await message.reply(climate)
                         break
                     case normalizedText.search('clima') != -1 && normalizedText.search('/') == -1:
-                        const simpleClimate: string = await new MeduzaApiService().apiWeather()
+                        const simpleClimate: string = await new PromoterBotApiService().apiWeather()
                         await message.reply(simpleClimate)
                         break
                     case normalizedText.slice(0, 9) == '/noticias':
                         try {
-                            const news: any = await new MeduzaApiService().apiNews(message.body.slice(10))
+                            const news: any = await new PromoterBotApiService().apiNews(message.body.slice(10))
                             if (news.linkImg == null) {
                                 await chat.sendMessage(news.txt)
                             } else {
@@ -265,12 +265,12 @@ export class Meduza {
                 const possibleToSendMessage: number = Math.floor(Math.random() * groupInMemory.possibleMessage)
 
                 if (possibleToSendSticker === 0 && message.body.search('/') === -1 && groupInMemory.chat) {
-                    const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new MeduzaApiService().sendSticker()}`))
+                    const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new PromoterBotApiService().sendSticker()}`))
                     await chat.sendMessage(sticker, { sendMediaAsSticker: true })
                 }
 
                 if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
-                    const meduzaRepo = new MeduzaApiService();
+                    const meduzaRepo = new PromoterBotApiService();
 
                     const answer = message.hasMedia
                         ? meduzaRepo.contextText('MIDIA')
@@ -302,14 +302,14 @@ export class Meduza {
     }
 
     // Adds the group to an in-memory array if it does not exist and returns
-    private getGroupInfoInMemory(groupId: string): MeduzaGroup {
-        const founded: MeduzaGroup | undefined = this.meduzaGroups.find((element: MeduzaGroup) => {
+    private getGroupInfoInMemory(groupId: string): PromoterGroup {
+        const founded: PromoterGroup | undefined = this.PromoterGroups.find((element: PromoterGroup) => {
             return element.groupId === groupId
         })
 
         if (founded === undefined) {
-            const newGroup: MeduzaGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
-            this.meduzaGroups.push(newGroup)
+            const newGroup: PromoterGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
+            this.PromoterGroups.push(newGroup)
             return newGroup
         }
 
@@ -331,22 +331,22 @@ export class Meduza {
 
     // Change the value of the group's possible sticker
     private setPossibleMessageSticker(chatId: string, value: number = 6): void {
-        const index: number = this.meduzaGroups.findIndex(element => element.groupId === chatId)
-        this.meduzaGroups[index].possibleMessagesticker = value
+        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
+        this.PromoterGroups[index].possibleMessagesticker = value
         return
     }
 
     // Change the group's possible message value
     private setPossibleMessage(chatId: string, value: number = 6): void {
-        const index: number = this.meduzaGroups.findIndex(element => element.groupId === chatId)
-        this.meduzaGroups[index].possibleMessage = value
+        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
+        this.PromoterGroups[index].possibleMessage = value
         return
     }
 
     // Change group chat value
     private setPossibleChat(chatId: string, value: boolean = false): void {
-        const index: number = this.meduzaGroups.findIndex(element => element.groupId === chatId)
-        this.meduzaGroups[index].chat = value
+        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
+        this.PromoterGroups[index].chat = value
         return
     }
 

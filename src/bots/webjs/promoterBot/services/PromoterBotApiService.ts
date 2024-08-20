@@ -6,7 +6,7 @@ import { WeatherResultResponse } from "../data/interfaces/WeatherResultResponse"
 import path from 'path'
 dotenv.config()
 
-export class MeduzaApiService {
+export class PromoterBotApiService {
     
     private api: AxiosInstance
 
