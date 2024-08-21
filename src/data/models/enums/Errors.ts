@@ -14,5 +14,6 @@ export enum Errors {
     CouldNotDeleteItem = "Could not delete item!",
     InvalidToken = "Invalid token!",
     JwtMustBeProvided = "jwt must be provided",
-    NoDocumentsMatchedQuery = "No documents matched the query."
+    NoDocumentsMatchedQuery = "No documents matched the query.",
+    TheBotIsAlreadyRunning = "The bot is already running."
 }

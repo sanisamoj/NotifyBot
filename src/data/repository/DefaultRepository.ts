@@ -12,7 +12,7 @@ import { Participant } from "../models/interfaces/Participant"
 import { NotifyBot } from "../../bots/webjs/notifyBot/NotifyBot"
 import { DataForActionWithParticipant } from "../models/interfaces/DataForActionWithParticipant"
 import { SendMessageInfo } from "../models/interfaces/SendMessageInfo"
-import { GroupChat } from "whatsapp-web.js"
+import { Client, GroupChat } from "whatsapp-web.js"
 import { NotifyBotConfig } from "../models/interfaces/NotifyBotConfig"
 import { Fields } from "../models/enums/Fields"
 import { BotStatus } from "../models/enums/BotStatus"
@@ -21,10 +21,11 @@ import { MongodbOperations } from "../../database/MongodbOperations"
 import { CollectionsInDb } from "../models/enums/CollectionsInDb"
 import { BotType } from "../models/enums/BotType"
 import { PromoterBot } from "../../bots/webjs/promoterBot/PromoterBot"
+import { AbstractNotifyBot } from "../models/abstracts/AbstractNotifyBot"
+import { Whatsapp } from "venom-bot"
 
 export class DefaultRepository extends DatabaseRepository {
-    private static notifyBots: NotifyBot[] = []
-    private static notifyVenomBots: NotifyVenomBot[] = []
+    private static notifyBots: AbstractNotifyBot<Client | Whatsapp>[] = []
     private static promoterBots: PromoterBot[] = []
     private mongodb: MongodbOperations = new MongodbOperations()
 
@@ -41,7 +42,10 @@ export class DefaultRepository extends DatabaseRepository {
             config: botMongodb.config
         }
 
+        const botIsAlreadyRunning: AbstractNotifyBot<Client | Whatsapp> | undefined = DefaultRepository.notifyBots.find(element => element.id === botData.id)
+
         if(botMongodb.botType === BotType.NOTIFY_BOT) {
+            if(botIsAlreadyRunning !== undefined) {throw new Error(Errors.TheBotIsAlreadyRunning)} 
             const notifyBot: NotifyBot = new NotifyBot(botData)
             DefaultRepository.notifyBots.push(notifyBot)
 
@@ -71,7 +75,7 @@ export class DefaultRepository extends DatabaseRepository {
             config: createBotRequest.config,
             botType: createBotRequest.botType,
             status: BotStatus.STARTED,
-            createdAt: new Date().toDateString()
+            createdAt: new Date().toISOString()
         }
 
         return botMongodb
@@ -111,7 +115,7 @@ export class DefaultRepository extends DatabaseRepository {
 
     private async botInfoFactory(botMongodb: BotMongodb): Promise<BotInfo> {
         const botId: string = botMongodb._id.toString()
-        let bot: NotifyBot | PromoterBot | undefined
+        let bot: AbstractNotifyBot<Client | Whatsapp> | PromoterBot | undefined
 
         if(botMongodb.botType === BotType.NOTIFY_BOT) {
             bot = DefaultRepository.notifyBots.find(element => element.id === botId)
@@ -139,22 +143,24 @@ export class DefaultRepository extends DatabaseRepository {
         return botInfo
     }
 
-    private getNotifyBot(botId: string): NotifyBot {
-        const notifyBot: NotifyBot | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
+    private getNotifyBot(botId: string): AbstractNotifyBot<Client | Whatsapp> {
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
         if (!notifyBot) { throw new Error(Errors.BotNotFound) }
         return notifyBot
     }
 
-    private getNotifyVenomBot(botId: string): NotifyVenomBot {
-        const notifyVenomBot: NotifyVenomBot | undefined = DefaultRepository.notifyVenomBots.find(element => element.id === botId)
-        if (!notifyVenomBot) { throw new Error(Errors.BotNotFound) }
-        return notifyVenomBot
+    private removeNotifyBot(botId: string): void {
+        const botIndex = DefaultRepository.notifyBots.findIndex(element => element.id === botId)
+        if (botIndex === -1) { 
+            throw new Error(Errors.BotNotFound)
+        }
+        DefaultRepository.notifyBots.splice(botIndex, 1)
     }
 
     async deleteBot(id: string): Promise<void> {
         const index: number = DefaultRepository.notifyBots.findIndex(element => element.id === id)
         if (index !== -1) {
-            const notifyBot: NotifyBot = DefaultRepository.notifyBots[index]
+            const notifyBot: AbstractNotifyBot<Client | Whatsapp> = DefaultRepository.notifyBots[index]
             notifyBot.destroy()
         }
 
@@ -169,21 +175,22 @@ export class DefaultRepository extends DatabaseRepository {
 
     async stopBot(botId: string): Promise<void> {
         await this.getNotifyBot(botId).stop()
+        this.removeNotifyBot(botId)
         this.removeBotFromTheList(botId)
     }
 
     async destroyAllBots(): Promise<void> {
-        DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.destroy() })
+        DefaultRepository.notifyBots.forEach(async (element: AbstractNotifyBot<Client | Whatsapp>) => { await element.destroy() })
     }
 
     async stopAllBots(): Promise<void> {
-        DefaultRepository.notifyBots.forEach(async (element: NotifyBot) => { await element.stop() })
+        DefaultRepository.notifyBots.forEach(async (element: AbstractNotifyBot<Client | Whatsapp>) => { await element.stop() })
     }
 
     private async removeBotFromTheList(botId: String) {
         const index = DefaultRepository.notifyBots.findIndex(bot => bot.id === botId)
         if (index !== -1) {
-            DefaultRepository.notifyBots.splice(index, 1);
+            DefaultRepository.notifyBots.splice(index, 1)
         }
     }
 
@@ -192,26 +199,18 @@ export class DefaultRepository extends DatabaseRepository {
 
         allBotsInDb.forEach(((bot: BotMongodb) => {
             if (bot.status !== BotStatus.DESTROYED) {
-                const botData: BotCreateData = {
-                    id: bot._id.toString(),
-                    name: bot.name,
-                    description: bot.description,
-                    profileImage: bot.profileImageUrl,
-                    admins: bot.admins,
-                    config: bot.config
-                }
-
                 this.initializeBot(bot._id.toString())
             }
         }))
     }
 
     async initializeEmergencyBots(): Promise<void> {
+        DefaultRepository.notifyBots = []
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach(((bot: BotMongodb) => {
             if (bot.status !== BotStatus.DESTROYED) {
-                const notifyBot: NotifyBot = this.getNotifyBot(bot._id.toString())
+                const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(bot._id.toString())
                 notifyBot.stop()
 
                 const botData: BotCreateData = {
@@ -224,11 +223,9 @@ export class DefaultRepository extends DatabaseRepository {
                 }
 
                 const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
-                DefaultRepository.notifyVenomBots.push(notifyVenomBot)
+                DefaultRepository.notifyBots.push(notifyVenomBot)
             }
         }))
-
-        DefaultRepository.notifyBots = []
     }
 
     async initializeEmergencyBot(botId: string): Promise<void> {
@@ -236,8 +233,10 @@ export class DefaultRepository extends DatabaseRepository {
         if (!botMongodb) { throw new Error(Errors.BotNotFound) }
 
         if (botMongodb.status !== BotStatus.DESTROYED) {
-            const notifyBot: NotifyBot = this.getNotifyBot(botMongodb._id.toString())
-            notifyBot.stop()
+            const botId: string = botMongodb._id.toString()
+            const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
+            await notifyBot.stop()
+            this.removeNotifyBot(botId)
 
             const botData: BotCreateData = {
                 id: botMongodb._id.toString(),
@@ -249,44 +248,13 @@ export class DefaultRepository extends DatabaseRepository {
             }
 
             const notifyVenomBot: NotifyVenomBot = new NotifyVenomBot(botData)
-            DefaultRepository.notifyVenomBots.push(notifyVenomBot)
-
-            const index: number = DefaultRepository.notifyBots.findIndex(element => element.id === botMongodb._id.toString())
-            if (index !== -1) { DefaultRepository.notifyBots.splice(index, 1) }
-        }
-    }
-
-    async stopEmergencyBots(): Promise<void> {
-        const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
-
-        allBotsInDb.forEach(((bot: BotMongodb) => {
-            if (bot.status !== BotStatus.DESTROYED) {
-                try {
-                    const notifyVenomBot: NotifyVenomBot = this.getNotifyVenomBot(bot._id.toString())
-                    notifyVenomBot.stop()
-                } catch (error) { }
-            }
-        }))
-
-        DefaultRepository.notifyVenomBots = []
-    }
-
-    async stopEmergencyBot(botId: string): Promise<void> {
-        const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
-        if (!botMongodb) { throw new Error(Errors.BotNotFound) }
-
-        if (botMongodb.status !== BotStatus.DESTROYED) {
-            const notifyVenomBot: NotifyVenomBot = this.getNotifyVenomBot(botMongodb._id.toString())
-            notifyVenomBot.stop()
-
-            const index: number = DefaultRepository.notifyVenomBots.findIndex(element => element.id === botMongodb._id.toString())
-            if (index !== -1) { DefaultRepository.notifyVenomBots.splice(index, 1) }
+            DefaultRepository.notifyBots.push(notifyVenomBot)
         }
     }
 
     async updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void> {
         await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { config: config })
-        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         notifyBot.updateBotConfig(config)
     }
 
@@ -295,18 +263,18 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     getBotConfig(botId: string): NotifyBotConfig | null {
-        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         const notifyBotConfig: NotifyBotConfig | null = notifyBot.getBotConfig()
         return notifyBotConfig
     }
 
     async sendMessage(botId: string, to: string, message: string): Promise<void> {
-        const notifyBot: NotifyBot = this.getNotifyBot(botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         notifyBot.sendMessage(to, message)
     }
 
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
-        const notifyBot: NotifyBot = this.getNotifyBot(createGroupInfo.botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(createGroupInfo.botId)
         const groupId: string = await notifyBot.createGroup(
             createGroupInfo.title,
             createGroupInfo.description,
@@ -355,7 +323,7 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async getGroupById(botId: string, groupId: string): Promise<GroupInfo> {
-        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const norifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         const groupChat: GroupChat = await norifyBot.returnGroupById(groupId)
         const groupInfo: GroupInfo = await this.groupInfoFactoryWithParticipantsUpdated(botId, groupChat)
         return groupInfo
@@ -364,14 +332,16 @@ export class DefaultRepository extends DatabaseRepository {
     async getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]> {
         const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(botId) })
         if (!botMongodb) { throw new Error(Errors.BotNotFound) }
-        let bot: NotifyBot | PromoterBot | undefined
+        let bot: AbstractNotifyBot<Client | Whatsapp> | PromoterBot | undefined
 
         if(botMongodb.botType === BotType.NOTIFY_BOT) {
             bot = DefaultRepository.notifyBots.find(element => element.id === botId)
         } else {
             bot = DefaultRepository.promoterBots.find(element => element.id === botId)
         }
-        if (!bot) { throw new Error(Errors.BotNotFound) }
+        if (!bot) { 
+            return []
+         }
         
         const groups: Group[] = await this.mongodb.returnAllWithQuery<Group>(CollectionsInDb.Groups, { [Fields.BotId]: botId })
         const groupInfoList: GroupInfo[] = await Promise.all(groups.map(async (group) => {
@@ -383,7 +353,7 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     private async groupInfoFactoryWithParticipantsUpdated(botId: string, groupChat: GroupChat): Promise<GroupInfo> {
-        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const norifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         const group: GroupChat = await norifyBot.returnGroupById(groupChat.id.user)
 
         let participants: Participant[] = []
@@ -409,22 +379,22 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async deleteGroupById(botId: string, groupId: string): Promise<void> {
-        const norifyBot: NotifyBot = this.getNotifyBot(botId)
+        const norifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         norifyBot.deleteGroup(groupId)
     }
 
     async addParticipantToTheGroup(info: DataForActionWithParticipant): Promise<void> {
-        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(info.botId)
         notifyBot.addParticipantToGroup(info.groupId, info.phone)
     }
 
     async removeParticipantFromTheGroup(info: DataForActionWithParticipant): Promise<void> {
-        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(info.botId)
         notifyBot.removeParticipantFromTheGroup(info.groupId, info.phone)
     }
 
     async sendMessageTotheGroup(info: SendMessageInfo): Promise<void> {
-        const notifyBot: NotifyBot = this.getNotifyBot(info.botId)
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(info.botId)
         notifyBot.sendMessageToTheGroup(info.to, info.message)
     }
 

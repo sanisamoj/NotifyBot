@@ -8,27 +8,12 @@ import { BotCreateData } from '../../data/models/interfaces/BotCreateData'
 import { HandleMessageInfo } from '../../data/models/interfaces/HandleMessageInfo'
 import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
 import { NotifyBotService } from '../services/NotifyBotService'
+import { AbstractNotifyBot } from '../../data/models/abstracts/AbstractNotifyBot'
+import { GroupChat } from 'whatsapp-web.js'
 
-export class NotifyVenomBot {
-    id: string
-    name: string;
-    description: string
-    number: string = ""
-    profileImage: string | null = null
-    qrCode: string | undefined = undefined
-    private config: NotifyBotConfig | null = null
-    status: string = BotStatus.EMERGENCY
-
-    private client!: Whatsapp
-    private superAdmins: string[]
-
+export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     constructor(botData: BotCreateData) {
-        this.id = botData.id
-        this.name = botData.name
-        this.description = botData.description
-        this.profileImage = botData.profileImage
-        this.superAdmins = botData.admins
-        this.config = botData.config
+       super(botData)
 
         create(`session-${this.id}`, (base64Qrimg) => {
             this.qrCode = base64Qrimg
@@ -62,11 +47,11 @@ export class NotifyVenomBot {
         })
     }
 
-    private async start(client: Whatsapp) {
+    async start(client: Whatsapp) {
         await client.setProfileStatus(this.description)
     }
 
-    private async onReady() {
+    async onReady() {
         console.log(`Bot ${this.number} | Online ✅`)
         const hostDevice: any = await this.client.getHostDevice()
         this.number = hostDevice.id.user
@@ -77,7 +62,7 @@ export class NotifyVenomBot {
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
-    private async disconnect(reason: string) {
+    async disconnect(reason: string) {
         console.log('Client was logged out', reason)
         this.status = BotStatus.DESTROYED
         this.qrCode = ""
@@ -91,7 +76,7 @@ export class NotifyVenomBot {
         })
     }
 
-    private async onHandleMessages(client: Whatsapp) {
+    async onHandleMessages(client: Whatsapp) {
         client.onMessage(async (message: Message) => {
             if (!this.config) return
     
@@ -118,7 +103,8 @@ export class NotifyVenomBot {
             botId: this.id,
             groupId: groupId,
             from: from,
-            message: message.body
+            message: message.body,
+            createdAt: new Date().toISOString()
         }
     }
 
@@ -168,5 +154,35 @@ export class NotifyVenomBot {
     async sendMessage(sendTo: string, message: string): Promise<void> {
         await this.client.sendText(`${sendTo}@c.us`, message)
     }
+
+    // Send a message with image
+    async sendMessageWithImage(sendTo: string, message: string, imageFilePath: string) {
+        await this.client.sendImage(sendTo, imageFilePath, 'image-name.jpg', message)
+    }
+
+    // Send a message with image url
+    async sendMessageWithImageUrl(sendTo: string, message: string, imageUrl: string) {
+        await this.client.sendImage(sendTo, imageUrl, 'image-name.jpg', message)
+    }
+
+    createGroup(title: string, description: string, imgProfileUrl: string | null, adminsOfThisGroup: string[]): Promise<string> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+    returnGroupById(groupId: string): Promise<GroupChat> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+    addParticipantToGroup(groupId: string, phone: string): Promise<void> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+    removeParticipantFromTheGroup(groupId: string, phone: string): Promise<void> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+    deleteGroup(groupId: string): Promise<void> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+    sendMessageToTheGroup(groupId: string, message: string): Promise<void> {
+        throw new Error('This bot is unable to perform this action.')
+    }
+
 
 }

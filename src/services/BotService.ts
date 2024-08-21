@@ -36,6 +36,10 @@ export class BotService {
         await this.repository.stopBot(botId)
     }
 
+    async stopAllBots(): Promise<void> {
+        await this.repository.stopAllBots()
+    }
+
     async restartBotById(botId: string): Promise<void> {
         await this.repository.initializeBot(botId)
     }
@@ -53,14 +57,6 @@ export class BotService {
 
     async initializeEmergencyBot(botId: string): Promise<void> {
         await this.repository.initializeEmergencyBot(botId)
-    }
-
-    async stopEmergencyBots(): Promise<void> {
-        await this.repository.stopEmergencyBots()
-    }
-
-    async stopEmergencyBot(botId: string): Promise<void> {
-        await this.repository.stopEmergencyBot(botId)
     }
 
     async getBotById(id: string): Promise<BotInfo> {

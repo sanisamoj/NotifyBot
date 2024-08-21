@@ -10,27 +10,12 @@ import { HandleMessageInfo } from '../../../data/models/interfaces/HandleMessage
 import { NotifyBotStatus } from '../../../data/models/interfaces/NotifyBotStatus'
 import { NotifyBotService } from '../../services/NotifyBotService'
 import { BotStatus } from '../../../data/models/enums/BotStatus'
+import { AbstractNotifyBot } from '../../../data/models/abstracts/AbstractNotifyBot'
 
-export class NotifyBot {
-    id: string
-    name: string
-    description: string
-    number: string = ""
-    profileImage: string | null = null
-    qrCode: string | undefined = undefined
-    private config: NotifyBotConfig | null = null
-    status: string = BotStatus.STARTED
-
-    private client!: Client
-    private superAdmins: string[]
+export class NotifyBot extends AbstractNotifyBot<Client> {
 
     constructor(botData: BotCreateData) {
-        this.id = botData.id
-        this.name = botData.name
-        this.description = botData.description
-        this.profileImage = botData.profileImage
-        this.superAdmins = botData.admins
-        this.config = botData.config
+        super(botData)
 
         this.client = new Client({
             puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] },
@@ -92,7 +77,7 @@ export class NotifyBot {
     }
 
     // Configure the bot and send an initialization message
-    private async start(client: Client) {
+    async start(client: Client) {
         await client.setDisplayName(this.name)
         await client.setStatus(this.description)
 
@@ -103,7 +88,7 @@ export class NotifyBot {
     }
 
     // Performs procedures when the bot is ready
-    private async onReady() {
+    async onReady() {
         console.log(`Bot ${this.number} | Online ✅`)
         this.number = this.client.info.wid.user
         new NotifyBotService().setNumber(this.id, this.number)
@@ -114,7 +99,7 @@ export class NotifyBot {
     }
 
     // Performs the procedures for disconnection
-    private async disconnect(reason: string) {
+    async disconnect(reason: string) {
         console.log('Client was logged out', reason)
         this.status = BotStatus.DESTROYED
         this.qrCode = ""
@@ -128,17 +113,17 @@ export class NotifyBot {
         })
     }
 
-    private async onHandleMessages(client: Client) {
+    async onHandleMessages(client: Client) {
         client.on('message', async (message: Message) => {
             if (!this.config) return
-    
+
             const isGroup: boolean = this.isGroupMessage(message)
-    
+
             // Sending automatic messages
             if (!isGroup && this.config.automaticMessagePermission && this.config.automaticMessage) {
                 await client.sendMessage(message.from, this.config.automaticMessage)
             }
-    
+
             // Sending messages to RabbitMQ
             if (this.config.queueRabbitMqHandleMessage) {
                 const handleMessageInfo: HandleMessageInfo = this.createHandleMessageInfo(message, isGroup)
@@ -150,12 +135,13 @@ export class NotifyBot {
     private createHandleMessageInfo(message: Message, isGroup: boolean): HandleMessageInfo {
         const from: string = isGroup && message.author ? message.author.replace("@c.us", "") : message.from.replace("@c.us", "")
         const groupId: string | null = isGroup ? message.from.replace("@g.us", "") : null
-    
+
         return {
             botId: this.id,
             groupId: groupId,
             from: from,
-            message: message.body
+            message: message.body,
+            createdAt: new Date().toISOString()
         }
     }
 
@@ -207,6 +193,18 @@ export class NotifyBot {
     // Send a message
     async sendMessage(sendTo: string, message: string): Promise<void> {
         await this.client.sendMessage(`${sendTo}@c.us`, message)
+    }
+
+    // Send a message with image
+    async sendMessageWithImage(sendTo: string, message: string, imageFilePath: string) {
+        const media: MessageMedia = MessageMedia.fromFilePath(imageFilePath)
+        await this.client.sendMessage(sendTo, media, { caption: message })
+    }
+
+    // Send a message with image url
+    async sendMessageWithImageUrl(sendTo: string, message: string, imageUrl: string) {
+        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl)
+        await this.client.sendMessage(sendTo, media, { caption: message })
     }
 
     // Create a group

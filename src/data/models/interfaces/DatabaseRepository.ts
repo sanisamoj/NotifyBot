@@ -20,8 +20,6 @@ export abstract class DatabaseRepository {
     abstract initializeAllBots(): Promise<void>
     abstract initializeEmergencyBots(): Promise<void>
     abstract initializeEmergencyBot(botId: string): Promise<void>
-    abstract stopEmergencyBots(): Promise<void>
-    abstract stopEmergencyBot(botId: string): Promise<void>
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
     abstract updateBot(botId: string, field: string, value: any): Promise<void>
     abstract getBotConfig(botId: string): NotifyBotConfig | null

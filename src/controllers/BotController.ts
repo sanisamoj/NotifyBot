@@ -31,6 +31,11 @@ export class BotController {
         return reply.status(200).send()
     }
 
+    async stopAllBots(request: FastifyRequest, reply: FastifyReply) {
+        await new BotService().stopAllBots()
+        return reply.status(200).send()
+    }
+
     async restartBot(request: FastifyRequest, reply: FastifyReply) {
         const { id } = request.params as { id: string }
         await new BotService().restartBotById(id)
@@ -45,17 +50,6 @@ export class BotController {
     async initializeEmergencyBot(request: FastifyRequest, reply: FastifyReply) {
         const { id } = request.params as { id: string }
         await new BotService().initializeEmergencyBot(id)
-        return reply.status(200).send()
-    }
-
-    async stopEmergencyBots(request: FastifyRequest, reply: FastifyReply) {
-        await new BotService().stopEmergencyBots()
-        return reply.status(200).send()
-    }
-
-    async stopEmergencyBot(request: FastifyRequest, reply: FastifyReply) {
-        const { id } = request.params as { id: string }
-        await new BotService().stopEmergencyBot(id)
         return reply.status(200).send()
     }
 
