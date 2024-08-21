@@ -281,7 +281,13 @@ export class PromoterBot {
 
             } else {
                 const user: string = message.from.replace('@c.us', '')
-                await message.reply("Meu criador não permite mais que eu mande mensagem no pv :(\n\nChama ele no pv - https://wa.me/5511998342464")
+
+                if (this.config) {
+                    // Sending automatic messages
+                    if (this.config.automaticMessagePermission && this.config.automaticMessage) {
+                        await client.sendMessage(message.from, this.config.automaticMessage)
+                    }
+                }
             }
         })
     }
