@@ -21,6 +21,12 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.BotNotFound,
                 details: null
             }
+        case Errors.BotNotFound:
+            return {
+                statusCode: 403,
+                error: Errors.TheBotIsAlreadyRunning,
+                details: null
+            }
         case Errors.MaxParticipantsReached:
             return {
                 statusCode: 409,
