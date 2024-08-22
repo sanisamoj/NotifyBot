@@ -57,8 +57,7 @@ export class PromoterBotApiService {
         return stickers[Math.floor(Math.random() * stickers.length)]
     }
 
-    contextText(mensagemAnormalized: string): string {
-        console.log(mensagemAnormalized)
+    contextText(mensagemAnormalized: string): string | null {
         const normalizedMessage = mensagemAnormalized.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase()
 
         const messageMap = new Map<string, string[]>([
@@ -78,7 +77,7 @@ export class PromoterBotApiService {
             }
         }
 
-        return "Não consegui entender a mensagem."
+        return null
     }
 
     async apiNews(news: string): Promise<any> {

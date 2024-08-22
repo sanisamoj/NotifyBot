@@ -277,7 +277,7 @@ export class PromoterBot {
                         ? meduzaRepo.contextText('MIDIA')
                         : meduzaRepo.contextText(normalizedText)
 
-                    await chat.sendMessage(answer)
+                    if(answer) { await chat.sendMessage(answer) }
                 }
 
             } else {
