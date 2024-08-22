@@ -36,5 +36,5 @@ RUN npm install
 COPY . .
 
 EXPOSE 8585
-CMD ["sh", "-c", "npm run build && npm run deploy"]
+CMD ["sh", "-c", "npm run build && npm run copy-stickers && npm run deploy"]
 

@@ -132,6 +132,7 @@ export class PromoterBot {
     private async onHandleMessages(client: Client) {
         client.on('message', async (message: Message) => {
             const isGroup: boolean = this.isGroupMessage(message)
+            const isAdminMessage: boolean = this.superAdmins.includes(message.from.replace('@c.us', ''))
 
             if (isGroup) {
                 const chat: GroupChat = await message.getChat() as GroupChat
@@ -280,9 +281,8 @@ export class PromoterBot {
                 }
 
             } else {
-                const user: string = message.from.replace('@c.us', '')
-
-                if (this.config) {
+                if (this.config && !isAdminMessage) {
+                    
                     // Sending automatic messages
                     if (this.config.automaticMessagePermission && this.config.automaticMessage) {
                         await client.sendMessage(message.from, this.config.automaticMessage)
