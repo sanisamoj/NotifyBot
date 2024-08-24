@@ -1,15 +1,15 @@
-import { Client, LocalAuth, WAState, Call, MessageMedia, Message, Chat, GroupChat, GroupParticipant } from "whatsapp-web.js"
+import { Client, LocalAuth, WAState, Call, MessageMedia, Message, Chat, GroupChat, GroupParticipant, GroupNotification, GroupNotificationTypes, Contact } from "whatsapp-web.js"
 import { Config } from "../../../Config"
 import qrcode from 'qrcode-terminal'
 import { BotStatus } from "../../../data/models/enums/BotStatus"
 import { BotCreateData } from "../../../data/models/interfaces/BotCreateData"
-import { NotifyBotConfig } from "../../../data/models/interfaces/NotifyBotConfig"
 import { NotifyBotService } from "../../services/NotifyBotService"
 import { NotifyBotStatus } from "../../../data/models/interfaces/NotifyBotStatus"
 import path from 'path'
 import * as fsExtra from 'fs-extra'
 import { PromoterBotApiService } from "./services/PromoterBotApiService"
 import { PromoterGroup } from "./data/interfaces/MeduzaGroup"
+import { PromoterBotConfig } from "./data/interfaces/PromoterBotConfig"
 
 export class PromoterBot {
     id: string
@@ -18,7 +18,7 @@ export class PromoterBot {
     number: string = ""
     profileImage: string | null = null
     qrCode: string | undefined = undefined
-    private config: NotifyBotConfig | null = null
+    private config: PromoterBotConfig | null = null
     status: string = BotStatus.STARTED
 
     private client!: Client
@@ -31,7 +31,7 @@ export class PromoterBot {
         this.description = botData.description
         this.profileImage = botData.profileImage
         this.superAdmins = botData.admins
-        this.config = botData.config
+        this.config = botData.config as PromoterBotConfig
 
         this.client = new Client({
             puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] },
@@ -55,11 +55,12 @@ export class PromoterBot {
         this.client.on('ready', () => {
             clearTimeout(timeoutId)
             this.onReady()
+            this.start(this.client)
         })
 
         this.client.initialize().then(async () => {
-            this.start(this.client)
             this.onHandleMessages(this.client)
+            this.setupEventHandlers(this.client)
         })
 
         this.client.on('disconnected', (reason) => {
@@ -143,11 +144,9 @@ export class PromoterBot {
 
                 switch (true) {
                     case normalizedText == '/boasvindas':
-                        const welcomeMessage: string = `Oiee, sou a(o) *-- ${this.name} --* serei a(o) nova(o) companheira(o) do grupo de vocês\n\nEu posso por 
-                        enquanto marcar todos do grupo, realizar um sorteio e marcar uma pessoa aleatóriamente, posso também animar o grupo quando estiver muito silencioso, 
-                        posso contar algumas piadas, notícias e ainda interagir com algumas mensagens.\n\nPara ver o que eu posso fazer você pode me chamar digitando meu *nome*, ou */Comandos*\n\n*Palavras chaves até o momento:* _Sair, risadas(kkk) Quero, Legal, 
-                        Otimo, Sim, Acho, Verdade, Vamos, links, Clima, Melhor, Concordo, Vou, Vai, Vamo, Pix, Compro, Recebi, Comprei, Paguei, Dinheiro, Caro_`
-                        chat.sendMessage(welcomeMessage)
+                        if(this.config?.welcomerMessage) {
+                            await chat.sendMessage(this.config.welcomerMessage)
+                        }
                         break
                     case normalizedText.slice(0, 6) == '/todos' && messageFromAdmin === true:
                         let text: string = ''
@@ -277,12 +276,12 @@ export class PromoterBot {
                         ? meduzaRepo.contextText('MIDIA')
                         : meduzaRepo.contextText(normalizedText)
 
-                    if(answer) { await chat.sendMessage(answer) }
+                    if (answer) { await chat.sendMessage(answer) }
                 }
 
             } else {
                 if (this.config && !isAdminMessage) {
-                    
+
                     // Sending automatic messages
                     if (this.config.automaticMessagePermission && this.config.automaticMessage) {
                         await client.sendMessage(message.from, this.config.automaticMessage)
@@ -290,6 +289,31 @@ export class PromoterBot {
                 }
             }
         })
+    }
+
+    private async setupEventHandlers(client: Client) {
+
+        client.on('group_join', async (notification: GroupNotification) => {
+            const { chatId, author, type } = notification
+            const chat: Chat = await client.getChatById(chatId)
+
+            if (this.config?.welcomerMessage) {
+
+                let participantToMention: string | null = null
+
+                if (type === GroupNotificationTypes.INVITE) {
+                    participantToMention = (notification as any).id?.participant || null
+                } else {
+                    participantToMention = author
+                }
+
+                if (participantToMention) {
+                    const contact: any = await client.getContactById(participantToMention);
+                    await chat.sendMessage(`${this.config.welcomerMessage}\n@${contact.id.user}`, { mentions: [contact] })
+                }
+            }
+        })
+
     }
 
     private isGroupMessage(message: Message): boolean {

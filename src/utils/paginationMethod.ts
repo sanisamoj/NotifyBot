@@ -1,4 +1,4 @@
-import { PaginationResponse } from "../data/models/interfaces/PaginationResponse";
+import { PaginationResponse } from "../data/models/interfaces/PaginationResponse"
 
 export function paginationMethod(totalItems: number, pageSize: number, page: number): PaginationResponse {
     const totalPages = Math.ceil(totalItems / pageSize)

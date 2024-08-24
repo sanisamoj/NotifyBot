@@ -1,3 +1,4 @@
+import { PromoterBotConfig } from "../../../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
 import { NotifyBotConfig } from "./NotifyBotConfig"
 
 export interface BotCreateData {
@@ -6,5 +7,5 @@ export interface BotCreateData {
     description: string
     profileImage: string | null
     admins: string[]
-    config: NotifyBotConfig | null
+    config: NotifyBotConfig | PromoterBotConfig | null
 }

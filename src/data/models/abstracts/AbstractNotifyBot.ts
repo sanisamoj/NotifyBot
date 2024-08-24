@@ -22,7 +22,7 @@ export abstract class AbstractNotifyBot<T> {
         this.description = botData.description
         this.profileImage = botData.profileImage
         this.superAdmins = botData.admins
-        this.config = botData.config
+        this.config = botData.config as NotifyBotConfig
         this.status = BotStatus.STARTED
     }
 
