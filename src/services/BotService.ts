@@ -79,6 +79,10 @@ export class BotService {
         this.repository.sendMessage(sendMessageRequest.botId, sendMessageRequest.phone, sendMessageRequest.message)
     }
 
+    async sendMessageWithImage(botId: string, phone: string, message: string | null, imageFilePath: string) {
+        this.repository.sendMessageWithImage(botId, phone, message, imageFilePath)
+    }
+
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
         const groupInfo: GroupInfo = await this.repository.createGroup(createGroupInfo)
         return groupInfo

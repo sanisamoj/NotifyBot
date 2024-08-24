@@ -4,6 +4,7 @@ import { errorResponse } from "../error/errorResponse"
 
 export class ErrorsController {
     async globalFastifyError(error: any, reply: FastifyReply): Promise<void> {
+        console.log(error)
         let response: ErrorResponse = errorResponse(error.message)
         reply.status(response.statusCode).send(response)
     }

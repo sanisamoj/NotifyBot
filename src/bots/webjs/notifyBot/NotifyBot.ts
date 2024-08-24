@@ -39,10 +39,10 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         this.client.on('ready', () => {
             clearTimeout(timeoutId)
             this.onReady()
+            this.start(this.client)
         })
 
         this.client.initialize().then(async () => {
-            this.start(this.client)
             this.onHandleMessages(this.client)
         })
 
@@ -196,9 +196,13 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     }
 
     // Send a message with image
-    async sendMessageWithImage(sendTo: string, message: string, imageFilePath: string) {
+    async sendMessageWithImage(sendTo: string, message: string | null, imageFilePath: string) {
         const media: MessageMedia = MessageMedia.fromFilePath(imageFilePath)
-        await this.client.sendMessage(sendTo, media, { caption: message })
+        if (message) {
+            await this.client.sendMessage(`${sendTo}@c.us`, media, { caption: message })
+        } else {
+            await this.client.sendMessage(`${sendTo}@c.us`, media)
+        }
     }
 
     // Send a message with image url

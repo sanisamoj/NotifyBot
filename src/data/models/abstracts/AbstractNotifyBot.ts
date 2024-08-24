@@ -36,7 +36,7 @@ export abstract class AbstractNotifyBot<T> {
     abstract destroy(): Promise<void>
     abstract stop(): Promise<void>
     abstract sendMessage(sendTo: string, message: string): Promise<void>
-    abstract sendMessageWithImage(sendTo: string, message: string, imageFilePath: string): Promise<void>
+    abstract sendMessageWithImage(sendTo: string, message: string | null, imageFilePath: string): Promise<void>
     abstract sendMessageWithImageUrl(sendTo: string, message: string, imageUrl: string): Promise<void>
     abstract createGroup(title: string, description: string, imgProfileUrl: string | null, adminsOfThisGroup: string[]): Promise<string>
     abstract returnGroupById(groupId: string): Promise<GroupChat>
