@@ -517,7 +517,7 @@ export class PromoterBot {
     private async setPossibleMessage(chatId: string, value: number = 6): Promise<void> {
         if(!this.config?.possibleChat) { return }
         const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
-        this.promoterGroups[index].possibleMessagesticker = value
+        this.promoterGroups[index].possibleMessage = value
     }
 
     // Change group chat value
