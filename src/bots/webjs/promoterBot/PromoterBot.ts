@@ -294,11 +294,9 @@ export class PromoterBot {
                 }
 
                 if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
-                    const meduzaRepo = new PromoterBotApiService()
-
-                    const answer = message.hasMedia
-                        ? meduzaRepo.contextText('MIDIA')
-                        : meduzaRepo.contextText(normalizedText)
+                    const answer: string | null = message.hasMedia
+                        ? this.contextText('MIDIA')
+                        : this.contextText(normalizedText)
 
                     if (answer) { await chat.sendMessage(answer) }
                 }

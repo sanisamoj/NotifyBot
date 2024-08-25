@@ -57,29 +57,6 @@ export class PromoterBotApiService {
         return stickers[Math.floor(Math.random() * stickers.length)]
     }
 
-    contextText(mensagemAnormalized: string): string | null {
-        const normalizedMessage = mensagemAnormalized.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase()
-
-        const messageMap = new Map<string, string[]>([
-            ['SAIR', ['Boa, to pensando sair hoje tbm', 'Vai sair né?!', 'Nem falou que ia sair, tava querendo também....']],
-            ['KK', ['Boa, kkkkkk', 'kkkkkk', 'Não entendi kkkkk', 'kkkkk besta']],
-            ['QUERO', ['Eu também quero', 'Querer não é poder!', 'Eu também quero, mas querer não é poder!']],
-            ['LEGAL', ['Legal mesmo', 'Tbm achei', 'Será?', 'Legal? Será?', 'Mas não seria melhor o que é ilegal? kkkk parei']],
-            ['SIM', ['Concordo', 'Tbm concordo', 'Será?', 'Tbm acho']],
-            ['VAMOS', ['Bora', 'Vou tbm', 'Eu queria ir, mas tenho que ficar vendo os grupos']],
-            ['PIX', ['Tá com dinheiro né....', 'Pagamento já caiu?', 'Divide com os pobres esse dinheiro todo ai']],
-            ['LINK', ['Eu nem entro nessas coisas pq pode ser vírus', 'Nem vou entrar pq não confio em vc', 'Tenho pavor de link']]
-        ]);
-
-        for (const [key, messages] of messageMap) {
-            if (normalizedMessage.includes(key)) {
-                return messages[Math.floor(Math.random() * messages.length)]
-            }
-        }
-
-        return null
-    }
-
     async apiNews(news: string): Promise<any> {
         const tema = news || "politica brasileira";
         const apikey = process.env.API_KEY_NEWS;
