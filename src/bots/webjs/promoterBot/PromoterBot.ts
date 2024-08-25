@@ -10,6 +10,8 @@ import * as fsExtra from 'fs-extra'
 import { PromoterBotApiService } from "./services/PromoterBotApiService"
 import { PromoterGroup } from "./data/interfaces/MeduzaGroup"
 import { PromoterBotConfig } from "./data/interfaces/PromoterBotConfig"
+import { UserInGroup } from "./data/interfaces/UserInGroup"
+import { MessageHistory } from "./data/interfaces/MessageHistory"
 
 export class PromoterBot {
     id: string
@@ -23,7 +25,8 @@ export class PromoterBot {
 
     private client!: Client
     private superAdmins: string[]
-    private PromoterGroups: PromoterGroup[] = []
+    private promoterGroups: PromoterGroup[] = []
+    private usersInGroup: UserInGroup[] = []
 
     constructor(botData: BotCreateData) {
         this.id = botData.id
@@ -130,10 +133,12 @@ export class PromoterBot {
         })
     }
 
+    // Handles messages sent to the bot
     private async onHandleMessages(client: Client) {
         client.on('message', async (message: Message) => {
             const isGroup: boolean = this.isGroupMessage(message)
-            const isAdminMessage: boolean = this.superAdmins.includes(message.from.replace('@c.us', ''))
+            const phone: string = message.from.replace('@c.us', '')
+            const isAdminMessage: boolean = this.superAdmins.includes(phone)
 
             if (isGroup) {
                 const chat: GroupChat = await message.getChat() as GroupChat
@@ -141,11 +146,30 @@ export class PromoterBot {
                 const groupInMemory: PromoterGroup = this.getGroupInfoInMemory(chat.id.user)
                 const messageFromAdmin: boolean = this.isAdminFromThe(participants, message.author!!)
                 const normalizedText: string = this.normalizedMessage(message.body)
+                this.verifyUser(phone)
+
+                if (this.config?.flooding) {
+                    this.addMessageToTheMessageHistory(phone, message.body)
+                    const isFlooding: boolean = this.isFlooding(phone)
+
+                    if(isFlooding) {
+                        if(this.config.messageFlooding) { await chat.sendMessage(this.config.messageFlooding) }
+                        await chat.removeParticipants([message.from])
+                        this.removeUserFromGroup(phone)
+                    }
+                }
+
+                if(this.config?.blockZap) {
+                    if(message.body.length > 1000) {
+                        const messageToDelete: Message = await client.getMessageById(message.id._serialized)
+                        await messageToDelete.delete(true)
+                    }
+                }
 
                 switch (true) {
                     case normalizedText == '/boasvindas':
-                        if(this.config?.welcomerMessage) {
-                            await chat.sendMessage(this.config.welcomerMessage)
+                        if (this.config?.welcomeMessage) {
+                            await chat.sendMessage(this.config.welcomeMessage)
                         }
                         break
                     case normalizedText.slice(0, 6) == '/todos' && messageFromAdmin === true:
@@ -291,13 +315,69 @@ export class PromoterBot {
         })
     }
 
+    // Checks if the user exists if not added
+    private verifyUser(phone: string) {
+        const userInGroup: UserInGroup | undefined = this.usersInGroup.find(element => element.phone === phone)
+        if (userInGroup) { return }
+
+        const user: UserInGroup = {
+            phone: phone,
+            messageHistoryList: []
+        }
+
+        this.usersInGroup.push(user)
+    }
+
+    // Removes the user from the user history array
+    private removeUserFromGroup(phone: string) {
+        const index: number = this.usersInGroup.findIndex(element => element.phone === phone)
+        if(index !== 1) {
+            this.usersInGroup.slice(index, 1)
+        }
+    }
+
+    // Adds the message to the user's history
+    private addMessageToTheMessageHistory(phone: string, message: string) {
+        const userInGroup: UserInGroup | undefined = this.usersInGroup.find(element => element.phone === phone)
+        const messageHistory: MessageHistory = { message: message, createdAt: new Date().getTime() }
+        userInGroup?.messageHistoryList.push(messageHistory)
+    }
+
+    // Checks if the user is flooding
+    private isFlooding(phone: string) {
+        const userInGroup: UserInGroup | undefined = this.usersInGroup.find(element => element.phone === phone)
+        if (!userInGroup || userInGroup.messageHistoryList.length === 1) { return false }
+
+        if (userInGroup.messageHistoryList.length > 5) {
+            userInGroup.messageHistoryList.shift()
+            const areMessageEqual: boolean = userInGroup.messageHistoryList.every((messageHistory) => {
+                return messageHistory.message === userInGroup.messageHistoryList[0].message
+            })
+            if (areMessageEqual) { return true }
+        }
+
+        const oldMessageTimestamp: number = userInGroup.messageHistoryList[0].createdAt
+        const lastMessageTimestamp: number = userInGroup.messageHistoryList[userInGroup.messageHistoryList.length - 1].createdAt
+        const timeDifference: number = lastMessageTimestamp - oldMessageTimestamp
+        const messagePerSecond: number = userInGroup.messageHistoryList.length / (timeDifference / 1000)
+        const messageLimitPerSecond: number = 3
+
+        if (messagePerSecond > messageLimitPerSecond) {
+            userInGroup.messageHistoryList.shift()
+            return true
+        }
+
+        return false
+    }
+
+    // Observe the events
     private async setupEventHandlers(client: Client) {
 
         client.on('group_join', async (notification: GroupNotification) => {
             const { chatId, author, type } = notification
             const chat: Chat = await client.getChatById(chatId)
 
-            if (this.config?.welcomerMessage) {
+            if (this.config?.welcomeMessage) {
 
                 let participantToMention: string | null = null
 
@@ -309,17 +389,27 @@ export class PromoterBot {
 
                 if (participantToMention) {
                     const contact: any = await client.getContactById(participantToMention);
-                    await chat.sendMessage(`${this.config.welcomerMessage}\n@${contact.id.user}`, { mentions: [contact] })
+                    await chat.sendMessage(`@${contact.id.user}\n${this.config.welcomeMessage}`, { mentions: [contact] })
                 }
+            }
+        })
+
+        client.on('group_leave', async (notification: GroupNotification) => {
+            if (this.config?.leaveMessage) {
+                const { chatId } = notification
+                const chat: Chat = await client.getChatById(chatId)
+                await chat.sendMessage(this.config.leaveMessage)
             }
         })
 
     }
 
+    // Checks if the message was sent from a group  
     private isGroupMessage(message: Message): boolean {
         return (message.from.search('@g') === -1) ? false : true
     }
 
+    // Notifies about bot status
     private async setNotifyBotStatus(notifyBotStatus: NotifyBotStatus) {
         const notifyBotService: NotifyBotService = new NotifyBotService()
         await notifyBotService.setStatusAndNotifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
@@ -333,13 +423,13 @@ export class PromoterBot {
 
     // Adds the group to an in-memory array if it does not exist and returns
     private getGroupInfoInMemory(groupId: string): PromoterGroup {
-        const founded: PromoterGroup | undefined = this.PromoterGroups.find((element: PromoterGroup) => {
+        const founded: PromoterGroup | undefined = this.promoterGroups.find((element: PromoterGroup) => {
             return element.groupId === groupId
         })
 
         if (founded === undefined) {
             const newGroup: PromoterGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
-            this.PromoterGroups.push(newGroup)
+            this.promoterGroups.push(newGroup)
             return newGroup
         }
 
@@ -361,22 +451,22 @@ export class PromoterBot {
 
     // Change the value of the group's possible sticker
     private setPossibleMessageSticker(chatId: string, value: number = 6): void {
-        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
-        this.PromoterGroups[index].possibleMessagesticker = value
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].possibleMessagesticker = value
         return
     }
 
     // Change the group's possible message value
     private setPossibleMessage(chatId: string, value: number = 6): void {
-        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
-        this.PromoterGroups[index].possibleMessage = value
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].possibleMessage = value
         return
     }
 
     // Change group chat value
     private setPossibleChat(chatId: string, value: boolean = false): void {
-        const index: number = this.PromoterGroups.findIndex(element => element.groupId === chatId)
-        this.PromoterGroups[index].chat = value
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].chat = value
         return
     }
 
