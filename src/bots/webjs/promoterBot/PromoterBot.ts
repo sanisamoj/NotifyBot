@@ -12,6 +12,7 @@ import { PromoterGroup } from "./data/interfaces/MeduzaGroup"
 import { PromoterBotConfig } from "./data/interfaces/PromoterBotConfig"
 import { UserInGroup } from "./data/interfaces/UserInGroup"
 import { MessageHistory } from "./data/interfaces/MessageHistory"
+import { PromoterBotRepository } from "./services/PromoterBotRepository"
 
 export class PromoterBot {
     id: string
@@ -152,18 +153,43 @@ export class PromoterBot {
                     this.addMessageToTheMessageHistory(phone, message.body)
                     const isFlooding: boolean = this.isFlooding(phone)
 
-                    if(isFlooding) {
-                        if(this.config.messageFlooding) { await chat.sendMessage(this.config.messageFlooding) }
+                    if (isFlooding) {
+                        if (this.config.messageFlooding) { await chat.sendMessage(this.config.messageFlooding) }
                         await chat.removeParticipants([message.from])
                         this.removeUserFromGroup(phone)
                     }
                 }
 
-                if(this.config?.blockZap) {
-                    if(message.body.length > 1000) {
+                if (this.config?.blockZap) {
+                    if (message.body.length > 1000) {
                         const messageToDelete: Message = await client.getMessageById(message.id._serialized)
                         await messageToDelete.delete(true)
                     }
+                }
+
+                if (message.hasQuotedMsg && messageFromAdmin) {
+                    const quotedMessage: any = await message.getQuotedMessage()
+                    const { _serialized: messageId, participant } = quotedMessage.id
+
+                    switch (true) {
+                        case normalizedText === '/ban':
+                            await chat.removeParticipants([participant._serialized])
+                            break
+                        case normalizedText === '/del':
+                            const messageToDelete: Message = await client.getMessageById(messageId)
+                            await messageToDelete.delete(true)
+                            break
+                        case normalizedText === '/promote':
+                            await chat.promoteParticipants([participant._serialized])
+                            break
+                        case normalizedText === '/demote':
+                            await chat.demoteParticipants([participant._serialized])
+                            break
+                        default:
+                            break
+                    }
+
+                    return
                 }
 
                 switch (true) {
@@ -285,20 +311,23 @@ export class PromoterBot {
                         break
                 }
 
-                const possibleToSendSticker: number = Math.floor(Math.random() * groupInMemory.possibleMessagesticker)
-                const possibleToSendMessage: number = Math.floor(Math.random() * groupInMemory.possibleMessage)
+                if (this.config?.possibleChat?.chat) {
+                    const possibleToSendSticker: number = Math.floor(Math.random() * this.config.possibleChat.sticker)
+                    const possibleToSendMessage: number = Math.floor(Math.random() * this.config.possibleChat.message)
 
-                if (possibleToSendSticker === 0 && message.body.search('/') === -1 && groupInMemory.chat) {
-                    const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new PromoterBotApiService().sendSticker()}`))
-                    await chat.sendMessage(sticker, { sendMediaAsSticker: true })
-                }
+                    if (possibleToSendSticker === 0 && message.body.search('/') === -1 && groupInMemory.chat) {
+                        const sticker: MessageMedia = MessageMedia.fromFilePath(path.join(__dirname, '/stickers' + `/${await new PromoterBotApiService().sendSticker()}`))
+                        await chat.sendMessage(sticker, { sendMediaAsSticker: true })
+                    }
 
-                if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
-                    const answer: string | null = message.hasMedia
-                        ? this.contextText('MIDIA')
-                        : this.contextText(normalizedText)
+                    if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
+                        const answer: string | null = message.hasMedia
+                            ? this.contextText('MIDIA')
+                            : this.contextText(normalizedText)
 
-                    if (answer) { await chat.sendMessage(answer) }
+                        if (answer) { await chat.sendMessage(answer) }
+                    }
+
                 }
 
             } else {
@@ -314,9 +343,12 @@ export class PromoterBot {
     }
 
     private contextText(mensagemAnormalized: string): string | null {
+        if (!this.config?.responseTextContext) { return null }
         const normalizedMessage = mensagemAnormalized.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase()
 
-        const messageMap: Map<string, string[]> = this.config?.responseTextContext ?? new Map<string, string[]>()
+        const messageMap = this.config?.responseTextContext
+            ? new Map<string, string[]>(Object.entries(this.config.responseTextContext))
+            : new Map<string, string[]>()
 
         for (const [key, messages] of messageMap) {
             if (normalizedMessage.includes(key)) {
@@ -343,7 +375,7 @@ export class PromoterBot {
     // Removes the user from the user history array
     private removeUserFromGroup(phone: string) {
         const index: number = this.usersInGroup.findIndex(element => element.phone === phone)
-        if(index !== 1) {
+        if (index !== 1) {
             this.usersInGroup.slice(index, 1)
         }
     }
@@ -426,7 +458,7 @@ export class PromoterBot {
         const notifyBotService: NotifyBotService = new NotifyBotService()
         await notifyBotService.setBotStatus(notifyBotStatus)
 
-        if(this.config?.queueRabbitMqPermission) {
+        if (this.config?.queueRabbitMqPermission) {
             this.notifyBotStatus(notifyBotStatus)
         }
     }
@@ -448,8 +480,12 @@ export class PromoterBot {
             return element.groupId === groupId
         })
 
+        const possibleSticker: number = this.config?.possibleChat?.sticker ?? 6
+        const possibleMessage: number = this.config?.possibleChat?.message ?? 6
+        const chat: boolean = this.config?.possibleChat?.chat ?? false
+
         if (founded === undefined) {
-            const newGroup: PromoterGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: 6, possibleMessage: 6, chat: false }
+            const newGroup: PromoterGroup = { botId: this.id, groupId: groupId, possibleMessagesticker: possibleSticker, possibleMessage: possibleMessage, chat: chat }
             this.promoterGroups.push(newGroup)
             return newGroup
         }
@@ -471,24 +507,24 @@ export class PromoterBot {
     }
 
     // Change the value of the group's possible sticker
-    private setPossibleMessageSticker(chatId: string, value: number = 6): void {
-        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
-        this.promoterGroups[index].possibleMessagesticker = value
-        return
+    private async setPossibleMessageSticker(chatId: string, value: number = 6): Promise<void> {
+        if(!this.config?.possibleChat) { return }
+        this.config.possibleChat.sticker = value
+        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
     }
 
     // Change the group's possible message value
-    private setPossibleMessage(chatId: string, value: number = 6): void {
-        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
-        this.promoterGroups[index].possibleMessage = value
-        return
+    private async setPossibleMessage(chatId: string, value: number = 6): Promise<void> {
+        if(!this.config?.possibleChat) { return }
+        this.config.possibleChat.message = value
+        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
     }
 
     // Change group chat value
-    private setPossibleChat(chatId: string, value: boolean = false): void {
-        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
-        this.promoterGroups[index].chat = value
-        return
+    private async setPossibleChat(chatId: string, value: boolean = false): Promise<void> {
+        if(!this.config?.possibleChat) { return }
+        this.config.possibleChat.chat = value
+        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
     }
 
     // Destroy the bot and deletes cache
@@ -524,5 +560,5 @@ export class PromoterBot {
     getConfig(): PromoterBotConfig | null {
         return this.config
     }
- 
+
 }

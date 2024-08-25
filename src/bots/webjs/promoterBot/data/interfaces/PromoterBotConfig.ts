@@ -1,3 +1,5 @@
+import { PossibleChatPromoterBotConfig } from "./PossibleChatPromoterBotConfig"
+
 export interface PromoterBotConfig {
     automaticMessagePermission?: boolean
     automaticMessage?: string
@@ -11,4 +13,5 @@ export interface PromoterBotConfig {
     queueRabbitMqPermission?: boolean
     queueRabbitMqBotStatus?: string
     responseTextContext?: Map<string, string[]>
+    possibleChat?: PossibleChatPromoterBotConfig
 }

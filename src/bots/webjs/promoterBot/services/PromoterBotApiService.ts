@@ -58,28 +58,29 @@ export class PromoterBotApiService {
     }
 
     async apiNews(news: string): Promise<any> {
-        const tema = news || "politica brasileira";
-        const apikey = process.env.API_KEY_NEWS;
-        const arrayNews: any[] = [];
+        const tema = news || "politica brasileira"
+        const apikey = process.env.API_KEY_NEWS
+        const arrayNews: any[] = []
         
         if (!apikey) {
-            throw new Error("API key not found.");
+            throw new Error("API key not found.")
         }
     
-        const apiUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(tema.toLowerCase())}&from=${this.getFormattedDate()}&to=${this.getFormattedDate()}&language=pt&sortBy=publishedAt&apiKey=${apikey}`;
-        const api: AxiosInstance = axios.create();
+        const apiUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(tema.toLowerCase())}&from=${this.getFormattedDate()}&to=${this.getFormattedDate()}&language=pt&sortBy=publishedAt&apiKey=${apikey}`
+        const api: AxiosInstance = axios.create()
     
         try {
-            const response = await api.get(apiUrl);
-            arrayNews.push(response.data);
+            const response = await api.get(apiUrl)
+            arrayNews.push(response.data)
+            console.log(response.data)
         } catch (error) {
-            console.error("Error fetching news:", error);
-            throw new Error("Failed to fetch news.");
+            console.error("Error fetching news:", error)
+            throw new Error("Failed to fetch news.")
         }
     
         if (arrayNews[0]?.totalResults) {
-            const articleSelected = arrayNews[0].articles[Math.floor(Math.random() * arrayNews[0].articles.length)];
-            return this.formatResponse(tema, articleSelected);
+            const articleSelected = arrayNews[0].articles[Math.floor(Math.random() * arrayNews[0].articles.length)]
+            return this.formatResponse(tema, articleSelected)
         } else {
             return {
                 txt: "*Desculpa, não achei nada com o título pesquisado.*\n_Tenta pesquisar o título de uma forma diferente ex :_\n*_/notícias Crimes_*\n*_/notícias Política internacional_*",
@@ -93,7 +94,7 @@ export class PromoterBotApiService {
         const day = date.getDate().toString().padStart(2, '0')
         const month = (date.getMonth() + 1).toString().padStart(2, '0')
         const year = date.getFullYear().toString()
-        return `${year}/${month}/${day}`
+        return `${year}-${month}-${day}`
     }
     
     private formatResponse(tema: string, article: any): any {
