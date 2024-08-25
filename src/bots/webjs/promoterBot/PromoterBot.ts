@@ -509,22 +509,22 @@ export class PromoterBot {
     // Change the value of the group's possible sticker
     private async setPossibleMessageSticker(chatId: string, value: number = 6): Promise<void> {
         if(!this.config?.possibleChat) { return }
-        this.config.possibleChat.sticker = value
-        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].possibleMessagesticker = value
     }
 
     // Change the group's possible message value
     private async setPossibleMessage(chatId: string, value: number = 6): Promise<void> {
         if(!this.config?.possibleChat) { return }
-        this.config.possibleChat.message = value
-        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].possibleMessagesticker = value
     }
 
     // Change group chat value
     private async setPossibleChat(chatId: string, value: boolean = false): Promise<void> {
         if(!this.config?.possibleChat) { return }
-        this.config.possibleChat.chat = value
-        await new PromoterBotRepository().updatePromoterBotConfig(this.id, this.config!)
+        const index: number = this.promoterGroups.findIndex(element => element.groupId === chatId)
+        this.promoterGroups[index].chat = value
     }
 
     // Destroy the bot and deletes cache
