@@ -1,3 +1,4 @@
+import { PromoterBotConfig } from "../../../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
 import { BotInfo } from "./BotInfo"
 import { CreateBotRequest } from "./CreateBotRequest"
 import { CreateGroupInfo } from "./CreateGroupInfo"
@@ -21,8 +22,10 @@ export abstract class DatabaseRepository {
     abstract initializeEmergencyBots(): Promise<void>
     abstract initializeEmergencyBot(botId: string): Promise<void>
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
+    abstract updatePromoterBotConfig(botId: string, config: PromoterBotConfig | null): Promise<void>
     abstract updateBot(botId: string, field: string, value: any): Promise<void>
-    abstract getBotConfig(botId: string): NotifyBotConfig | null
+    abstract getNotifyBotConfig(botId: string): NotifyBotConfig | null
+    abstract getPromoterBotConfig(botId: string): PromoterBotConfig | null
     abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract sendMessageWithImage(botId: string, to: string, message: string | null, filePath: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>

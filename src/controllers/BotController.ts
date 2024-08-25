@@ -17,6 +17,7 @@ import { Config } from "../Config"
 import util from 'util'
 import crypto from 'crypto'
 import { pipeline } from 'node:stream'
+import { PromoterBotConfig } from "../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
 
 const pump = util.promisify(pipeline)
 
@@ -205,7 +206,7 @@ export class BotController {
 
     async updateBotConfig(request: FastifyRequest, reply: FastifyReply) {
         const updateBotConfigRequest: UpdateBotConfigRequest = request.body as UpdateBotConfigRequest
-        const response: NotifyBotConfig | null = await new BotService().updateNotifyBotConfig(updateBotConfigRequest.botId, updateBotConfigRequest.config)
+        const response: NotifyBotConfig | PromoterBotConfig | null = await new BotService().updateNotifyBotConfig(updateBotConfigRequest.botId, updateBotConfigRequest.config)
         if (response) {
             reply.status(200).send(response)
         } else {

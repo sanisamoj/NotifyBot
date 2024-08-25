@@ -114,7 +114,7 @@ export class PromoterBot {
         new NotifyBotService().setNumber(this.id, this.number)
 
         this.status = BotStatus.ONLINE
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
+        if(this.config?.queueRabbitMqPermission) { this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE }) }
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
@@ -487,4 +487,14 @@ export class PromoterBot {
         console.log(`Bot ${this.name} | Offline ⚠️`)
     }
 
+    // Updates bot config
+    updateConfig(config: PromoterBotConfig | null): void {
+        this.config = config
+    }
+
+    // Get bot config
+    getConfig(): PromoterBotConfig | null {
+        return this.config
+    }
+ 
 }

@@ -1,6 +1,6 @@
 import { BotCreateData } from '../../../data/models/interfaces/BotCreateData'
 import { NotifyBotConfig } from '../../../data/models/interfaces/NotifyBotConfig'
-import { GroupChat, MessageMedia } from 'whatsapp-web.js'
+import { GroupChat } from 'whatsapp-web.js'
 import { BotStatus } from '../enums/BotStatus'
 
 export abstract class AbstractNotifyBot<T> {

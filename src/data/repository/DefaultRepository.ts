@@ -23,6 +23,7 @@ import { BotType } from "../models/enums/BotType"
 import { PromoterBot } from "../../bots/webjs/promoterBot/PromoterBot"
 import { AbstractNotifyBot } from "../models/abstracts/AbstractNotifyBot"
 import { Whatsapp } from "venom-bot"
+import { PromoterBotConfig } from "../../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
 
 export class DefaultRepository extends DatabaseRepository {
     private static notifyBots: AbstractNotifyBot<Client | Whatsapp>[] = []
@@ -84,7 +85,6 @@ export class DefaultRepository extends DatabaseRepository {
     async getBotById(id: string): Promise<BotInfo> {
         const botMongodb: BotMongodb | null = await this.mongodb.return<BotMongodb>(CollectionsInDb.Bots, { _id: new ObjectId(id) })
         if (!botMongodb) { throw new Error(Errors.BotNotFound) }
-
         return this.botInfoFactory(botMongodb)
     }
 
@@ -147,6 +147,12 @@ export class DefaultRepository extends DatabaseRepository {
         const notifyBot: AbstractNotifyBot<Client | Whatsapp> | undefined = DefaultRepository.notifyBots.find(element => element.id === botId)
         if (!notifyBot) { throw new Error(Errors.BotNotFound) }
         return notifyBot
+    }
+
+    private getPromoterBot(botId: string): PromoterBot {
+        const promoterBot: PromoterBot | undefined = DefaultRepository.promoterBots.find(element => element.id === botId)
+        if (!promoterBot) { throw new Error(Errors.BotNotFound) }
+        return promoterBot
     }
 
     private removeNotifyBot(botId: string): void {
@@ -261,14 +267,26 @@ export class DefaultRepository extends DatabaseRepository {
         notifyBot.updateBotConfig(config)
     }
 
-    async updateBot(botId: string, field: string, value: any): Promise<void> {
-        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { [field]: value })
+    async updatePromoterBotConfig(botId: string, config: PromoterBotConfig | null) {
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { config: config })
+        const promoterBot: PromoterBot = this.getPromoterBot(botId)
+        promoterBot.updateConfig(config)
     }
 
-    getBotConfig(botId: string): NotifyBotConfig | null {
+    async updateBot(botId: string, field: string, config: any): Promise<void> {
+        await this.mongodb.update<BotMongodb>(CollectionsInDb.Bots, { [Fields.Id]: new ObjectId(botId) }, { [field]: config })
+    }
+
+    getNotifyBotConfig(botId: string): NotifyBotConfig | null {
         const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         const notifyBotConfig: NotifyBotConfig | null = notifyBot.getBotConfig()
         return notifyBotConfig
+    }
+
+    getPromoterBotConfig(botId: string): PromoterBotConfig | null {
+        const promoterBot: PromoterBot = this.getPromoterBot(botId)
+        const promoterBotConfig: PromoterBotConfig | null = promoterBot.getConfig()
+        return promoterBotConfig
     }
 
     async sendMessage(botId: string, to: string, message: string): Promise<void> {

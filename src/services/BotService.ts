@@ -1,8 +1,11 @@
+import { PromoterBotConfig } from "../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
 import { Config } from "../Config"
 import { BotStatus } from "../data/models/enums/BotStatus"
+import { BotType } from "../data/models/enums/BotType"
 import { NotifyQueues } from "../data/models/enums/NotifyQueues"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
+import { BotMongodb } from "../data/models/interfaces/BotMongodb"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
 import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
@@ -114,8 +117,14 @@ export class BotService {
         await this.repository.sendMessageTotheGroup(sendMessageInfo)
     }
 
-    async updateNotifyBotConfig(botId: string, notifyBotConfig: NotifyBotConfig | null): Promise<NotifyBotConfig | null> {
-        await this.repository.updateBotConfig(botId, notifyBotConfig)
-        return this.repository.getBotConfig(botId)
+    async updateNotifyBotConfig(botId: string, notifyBotConfig: any | null): Promise<NotifyBotConfig | PromoterBotConfig | null> {
+        const botInfo: BotInfo = await this.repository.getBotById(botId)
+        if(botInfo.botType === BotType.NOTIFY_BOT) {
+            await this.repository.updateBotConfig(botId, notifyBotConfig)
+            return this.repository.getNotifyBotConfig(botId)
+        } else {
+            await this.repository.updatePromoterBotConfig(botId, notifyBotConfig)
+            return this.repository.getPromoterBotConfig(botId)
+        }
     }
 }
