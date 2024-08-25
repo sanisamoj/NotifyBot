@@ -294,7 +294,7 @@ export class PromoterBot {
                 }
 
                 if (possibleToSendMessage === 0 && !message.body.includes('/') && groupInMemory.chat) {
-                    const meduzaRepo = new PromoterBotApiService();
+                    const meduzaRepo = new PromoterBotApiService()
 
                     const answer = message.hasMedia
                         ? meduzaRepo.contextText('MIDIA')
@@ -313,6 +313,20 @@ export class PromoterBot {
                 }
             }
         })
+    }
+
+    private contextText(mensagemAnormalized: string): string | null {
+        const normalizedMessage = mensagemAnormalized.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase()
+
+        const messageMap: Map<string, string[]> = this.config?.responseTextContext ?? new Map<string, string[]>()
+
+        for (const [key, messages] of messageMap) {
+            if (normalizedMessage.includes(key)) {
+                return messages[Math.floor(Math.random() * messages.length)]
+            }
+        }
+
+        return null
     }
 
     // Checks if the user exists if not added

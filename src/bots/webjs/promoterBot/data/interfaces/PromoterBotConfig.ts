@@ -1,13 +1,14 @@
 export interface PromoterBotConfig {
-    automaticMessagePermission: boolean | null
-    automaticMessage: string | null
-    callPermission: boolean | null
-    automaticCallMessage: string | null
-    welcomeMessage: string | null
-    leaveMessage: string | null
-    messageFlooding: string | null
-    flooding: boolean | null
-    blockZap: boolean | null
-    queueRabbitMqPermission: boolean | null
-    queueRabbitMqBotStatus: string | null
+    automaticMessagePermission?: boolean
+    automaticMessage?: string
+    callPermission?: boolean
+    automaticCallMessage?: string
+    welcomeMessage?: string
+    leaveMessage?: string
+    messageFlooding?: string
+    flooding?: boolean
+    blockZap?: boolean
+    queueRabbitMqPermission?: boolean
+    queueRabbitMqBotStatus?: string
+    responseTextContext?: Map<string, string[]>
 }
