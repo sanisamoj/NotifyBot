@@ -58,7 +58,7 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
         new NotifyBotService().setNumber(this.id, this.number)
 
         this.status = BotStatus.EMERGENCY
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.EMERGENCY })
+        this.setBotStatus({ botId: this.id, status: BotStatus.EMERGENCY })
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
@@ -66,7 +66,7 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
         console.log('Client was logged out', reason)
         this.status = BotStatus.DESTROYED
         this.qrCode = ""
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        this.setBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
         this.destroy()
     }
 
@@ -117,9 +117,18 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
         await notifyBotService.sendHandleMessageInfoToRabbitMQ(this.config?.queueRabbitMqHandleMessage!!, handleMessageInfo)
     }
 
-    private async setNotifyBotStatus(notifyBotStatus: NotifyBotStatus) {
+    private async setBotStatus(notifyBotStatus: NotifyBotStatus) {
         const notifyBotService: NotifyBotService = new NotifyBotService()
-        await notifyBotService.setStatusAndNotifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
+        await notifyBotService.setBotStatus(notifyBotStatus)
+
+        if(this.config?.queueRabbitMqPermission) {
+            this.notifyBotStatus(notifyBotStatus)
+        }
+    }
+
+    private async notifyBotStatus(notifyBotStatus: NotifyBotStatus) {
+        const notifyBotService: NotifyBotService = new NotifyBotService()
+        await notifyBotService.notifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
     }
 
     updateBotConfig(notifyBotConfig: NotifyBotConfig | null): void {
@@ -132,7 +141,7 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
 
     async destroy(): Promise<void> {
         await this.client.close()
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        await this.setBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
         const pathSave: string = path.join(`${Config.SAVE_VENOM_BOTS_FILE_PATH}/tokens`, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {
@@ -148,7 +157,8 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
 
     async stop(): Promise<void> {
         await this.client.close()
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+        await this.setBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+        console.log(`Bot ${this.name} | Offline ⚠️`)
     }
 
     async sendMessage(sendTo: string, message: string): Promise<void> {

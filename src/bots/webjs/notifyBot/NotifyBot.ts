@@ -55,11 +55,11 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
             switch (status) {
                 case WAState.CONFLICT:
                     this.status = BotStatus.CONFLICT
-                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.CONFLICT })
+                    this.setBotStatus({ botId: this.id, status: BotStatus.CONFLICT })
                     break
                 case WAState.CONNECTED:
                     this.status = BotStatus.ONLINE
-                    this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
+                    this.setBotStatus({ botId: this.id, status: BotStatus.ONLINE })
                     break
                 default:
                     break
@@ -93,8 +93,9 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         this.number = this.client.info.wid.user
         new NotifyBotService().setNumber(this.id, this.number)
 
-        this.status = BotStatus.ONLINE
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.ONLINE })
+        const botStatus: NotifyBotStatus = { botId: this.id, status: BotStatus.ONLINE }
+        this.status = botStatus.status
+        this.setBotStatus(botStatus)
         this.sendMessageOfInitialization(this.client, this.name)
     }
 
@@ -103,7 +104,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         console.log('Client was logged out', reason)
         this.status = BotStatus.DESTROYED
         this.qrCode = ""
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        this.setBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
     }
 
     // Sends startup message to all admins
@@ -154,9 +155,18 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         await notifyBotService.sendHandleMessageInfoToRabbitMQ(this.config?.queueRabbitMqHandleMessage!!, handleMessageInfo)
     }
 
-    private async setNotifyBotStatus(notifyBotStatus: NotifyBotStatus) {
+    private async setBotStatus(notifyBotStatus: NotifyBotStatus) {
         const notifyBotService: NotifyBotService = new NotifyBotService()
-        await notifyBotService.setStatusAndNotifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
+        await notifyBotService.setBotStatus(notifyBotStatus)
+
+        if(this.config?.queueRabbitMqPermission) {
+            this.notifyBotStatus(notifyBotStatus)
+        }
+    }
+
+    private async notifyBotStatus(notifyBotStatus: NotifyBotStatus) {
+        const notifyBotService: NotifyBotService = new NotifyBotService()
+        await notifyBotService.notifyToRabbitMQ(this.config?.queueRabbitMqBotStatus!!, notifyBotStatus)
     }
 
     updateBotConfig(notifyBotConfig: NotifyBotConfig | null): void {
@@ -170,7 +180,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     // Destroy the bot and deletes cache
     async destroy(): Promise<void> {
         await this.client.destroy()
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
+        await this.setBotStatus({ botId: this.id, status: BotStatus.DESTROYED })
         const pathSave: string = path.join(Config.SAVE_BOTS_FILE_PATH, `session-${this.id}`)
 
         if (fsExtra.existsSync(pathSave)) {
@@ -187,7 +197,8 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     // Destroy the bot
     async stop(): Promise<void> {
         await this.client.destroy()
-        this.setNotifyBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+        await this.setBotStatus({ botId: this.id, status: BotStatus.OFFLINE })
+        console.log(`Bot ${this.name} | Offline ⚠️`)
     }
 
     // Send a message

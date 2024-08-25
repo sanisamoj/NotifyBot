@@ -30,9 +30,12 @@ export class NotifyBotService {
         await rabbitMQService.sendMessage(queue, handleMessageInfo)
     }
 
-    async setStatusAndNotifyToRabbitMQ(queue: string, notifyBotStatus: NotifyBotStatus) {
+    async setBotStatus(notifyBotStatus: NotifyBotStatus) {
         await this.repository.updateBot(notifyBotStatus.botId, Fields.Status, notifyBotStatus.status)
+    }
+
+    async notifyToRabbitMQ(queue: string, notifyBotStatus: NotifyBotStatus) {
         const rabbitMQService: RabbitMQService = await RabbitMQService.getInstance()
-        await rabbitMQService.sendMessage(queue, notifyBotStatus)
+        try { await rabbitMQService.sendMessage(queue, notifyBotStatus) } catch {}
     }
 }

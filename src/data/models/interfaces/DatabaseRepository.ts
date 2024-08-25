@@ -9,6 +9,7 @@ import { SendMessageInfo } from "./SendMessageInfo"
 
 export abstract class DatabaseRepository {
     abstract initializeBot(botId: string): Promise<BotInfo>
+    abstract initializeAllBots(): Promise<void>
     abstract registerBot(createBotRequest: CreateBotRequest): Promise<BotInfo>
     abstract getBotById(id: string): Promise<BotInfo>
     abstract getAllBots(): Promise<BotInfo[]>
@@ -18,7 +19,6 @@ export abstract class DatabaseRepository {
     abstract stopBot(botId: string): Promise<void>
     abstract destroyAllBots(): Promise<void>
     abstract stopAllBots(): Promise<void>
-    abstract initializeAllBots(): Promise<void>
     abstract initializeEmergencyBots(): Promise<void>
     abstract initializeEmergencyBot(botId: string): Promise<void>
     abstract updateBotConfig(botId: string, config: NotifyBotConfig | null): Promise<void>
