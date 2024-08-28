@@ -223,7 +223,7 @@ export class DefaultRepository extends DatabaseRepository {
         const allBotsInDb: BotMongodb[] = await this.mongodb.returnAll<BotMongodb>(CollectionsInDb.Bots)
 
         allBotsInDb.forEach(((bot: BotMongodb) => {
-            if (bot.status !== BotStatus.DESTROYED) {
+            if (bot.status !== BotStatus.DESTROYED && bot.botType !== BotType.PROMOTER_BOT) {
                 const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(bot._id.toString())
                 notifyBot.stop()
 
@@ -413,6 +413,7 @@ export class DefaultRepository extends DatabaseRepository {
     }
 
     async deleteGroupById(botId: string, groupId: string): Promise<void> {
+        await this.mongodb.delete(CollectionsInDb.Groups, { [Fields.GroupId] : groupId })
         const norifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
         norifyBot.deleteGroup(groupId)
     }
