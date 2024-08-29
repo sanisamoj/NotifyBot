@@ -414,8 +414,8 @@ export class DefaultRepository extends DatabaseRepository {
 
     async deleteGroupById(botId: string, groupId: string): Promise<void> {
         await this.mongodb.delete(CollectionsInDb.Groups, { [Fields.GroupId] : groupId })
-        const norifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
-        norifyBot.deleteGroup(groupId)
+        const notify: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
+        notify.deleteGroup(groupId)
     }
 
     async addParticipantToTheGroup(info: DataForActionWithParticipant): Promise<void> {
@@ -431,6 +431,11 @@ export class DefaultRepository extends DatabaseRepository {
     async sendMessageTotheGroup(info: SendMessageInfo): Promise<void> {
         const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(info.botId)
         notifyBot.sendMessageToTheGroup(info.to, info.message)
+    }
+
+    async updateImageProfile(botId: string, filePath: string): Promise<void> {
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
+        await notifyBot.updatePhotoProfile(filePath)
     }
 
 }

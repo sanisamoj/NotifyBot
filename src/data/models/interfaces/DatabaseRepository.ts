@@ -35,4 +35,5 @@ export abstract class DatabaseRepository {
     abstract addParticipantToTheGroup(info: DataForActionWithParticipant): Promise<void>
     abstract removeParticipantFromTheGroup(info: DataForActionWithParticipant): Promise<void>
     abstract sendMessageTotheGroup(info: SendMessageInfo): Promise<void>
+    abstract updateImageProfile(botId: string, filePath: string): Promise<void>
 }

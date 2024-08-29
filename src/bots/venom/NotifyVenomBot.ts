@@ -178,21 +178,29 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     createGroup(title: string, description: string, imgProfileUrl: string | null, adminsOfThisGroup: string[]): Promise<string> {
         throw new Error('This bot is unable to perform this action.')
     }
+
     returnGroupById(groupId: string): Promise<GroupChat> {
         throw new Error('This bot is unable to perform this action.')
     }
+
     addParticipantToGroup(groupId: string, phone: string): Promise<void> {
         throw new Error('This bot is unable to perform this action.')
     }
+
     removeParticipantFromTheGroup(groupId: string, phone: string): Promise<void> {
         throw new Error('This bot is unable to perform this action.')
     }
+
     deleteGroup(groupId: string): Promise<void> {
         throw new Error('This bot is unable to perform this action.')
     }
+
     sendMessageToTheGroup(groupId: string, message: string): Promise<void> {
         throw new Error('This bot is unable to perform this action.')
     }
 
+    updatePhotoProfile(filePath: string): Promise<void> {
+        throw new Error('This bot is unable to perform this action.')
+    }
 
 }

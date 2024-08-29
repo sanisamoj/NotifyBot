@@ -44,4 +44,5 @@ export abstract class AbstractNotifyBot<T> {
     abstract removeParticipantFromTheGroup(groupId: string, phone: string): Promise<void>
     abstract deleteGroup(groupId: string): Promise<void>
     abstract sendMessageToTheGroup(groupId: string, message: string): Promise<void>
+    abstract updatePhotoProfile(filePath: string): Promise<void>
 }

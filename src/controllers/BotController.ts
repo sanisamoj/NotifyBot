@@ -79,30 +79,7 @@ export class BotController {
     async sendMessageWithImage(request: any, reply: FastifyReply) {
         const { id: botId } = request.params as { id: string }
         const data: any = await request.file()
-        const filehash: string = crypto.randomBytes(16).toString('hex')
-        const fileExtension: string = path.extname(data.filename)
-        const newFileName: string = `${filehash}${fileExtension}`
-        const filePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
-
-        const uploadFolder: string = Config.UPLOAD_FOLDER
-        if (!fsExtra.existsSync(filePath)) {
-            fsExtra.mkdirSync(uploadFolder, { recursive: true })
-        }
-
-        await pump(data.file, fsExtra.createWriteStream(filePath))
-
-        const phone: string = data.fields.phone.value
-        let messageText: string | null = null
-        if (data.fields && data.fields.message) {
-            messageText = data.fields.message.value
-        }
-
-        await new BotService().sendMessageWithImage(botId, phone, messageText, filePath)
-
-        try {
-            fsExtra.removeSync(filePath)
-        } catch (error) { }
-
+        await new BotService().sendMessageWithImage(botId, data)
         return reply.status(200).send()
     }
 
@@ -212,5 +189,12 @@ export class BotController {
         } else {
             reply.send(200).send()
         }
+    }
+
+    async updateImageProfile(request: any, reply: FastifyReply) {
+        const { id: botId } = request.params as { id: string }
+        const data: any = await request.file()
+        await new BotService().updateImageProfile(botId, data)
+        return reply.status(200).send()
     }
 }

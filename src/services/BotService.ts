@@ -5,7 +5,6 @@ import { BotType } from "../data/models/enums/BotType"
 import { NotifyQueues } from "../data/models/enums/NotifyQueues"
 import { BotInfo } from "../data/models/interfaces/BotInfo"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
-import { BotMongodb } from "../data/models/interfaces/BotMongodb"
 import { CreateBotRequest } from "../data/models/interfaces/CreateBotRequest"
 import { CreateGroupInfo } from "../data/models/interfaces/CreateGroupInfo"
 import { DatabaseRepository } from "../data/models/interfaces/DatabaseRepository"
@@ -18,6 +17,16 @@ import { SendMessageRequest } from "../data/models/interfaces/SendMessageRequest
 import { SendNotifyServerBotsStatus } from "../data/models/interfaces/SendNotifyServerBotsStatus"
 import { paginationMethod } from "../utils/paginationMethod"
 import { RabbitMQService } from "./RabbitMQService"
+import * as fsExtra from 'fs-extra'
+import * as path from 'path'
+import util from 'util'
+import crypto from 'crypto'
+import { pipeline } from 'node:stream'
+import * as dotenv from 'dotenv'
+import { Fields } from "../data/models/enums/Fields"
+
+const pump = util.promisify(pipeline)
+dotenv.config()
 
 export class BotService {
     private repository: DatabaseRepository
@@ -82,8 +91,20 @@ export class BotService {
         this.repository.sendMessage(sendMessageRequest.botId, sendMessageRequest.phone, sendMessageRequest.message)
     }
 
-    async sendMessageWithImage(botId: string, phone: string, message: string | null, imageFilePath: string) {
-        this.repository.sendMessageWithImage(botId, phone, message, imageFilePath)
+    async sendMessageWithImage(botId: string, data: any) {
+        const fileExtension: string = path.extname(data.filename)
+        const newFileName: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
+        const filePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
+
+        const phone: string = data.fields.phone.value
+        let messageText: string | null = null
+        if (data.fields && data.fields.message) {
+            messageText = data.fields.message.value
+        }
+
+        await this.saveImage(filePath, data)
+        await this.repository.sendMessageWithImage(botId, phone, messageText, filePath)
+        this.deleteImage(filePath)
     }
 
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
@@ -119,12 +140,59 @@ export class BotService {
 
     async updateNotifyBotConfig(botId: string, notifyBotConfig: any | null): Promise<NotifyBotConfig | PromoterBotConfig | null> {
         const botInfo: BotInfo = await this.repository.getBotById(botId)
-        if(botInfo.botType === BotType.NOTIFY_BOT) {
+        if (botInfo.botType === BotType.NOTIFY_BOT) {
             await this.repository.updateBotConfig(botId, notifyBotConfig)
             return this.repository.getNotifyBotConfig(botId)
         } else {
             await this.repository.updatePromoterBotConfig(botId, notifyBotConfig)
             return this.repository.getPromoterBotConfig(botId)
         }
+    }
+
+    async updateImageProfile(botId: string, data: any): Promise<void> {
+        const oldImageUrl: BotInfo = await this.getBotById(botId)
+        const filePath: string = path.join(Config.UPLOAD_FOLDER, this.getSubstringAfterLastSlash(oldImageUrl.profileImageUrl))
+        await this.deleteImage(filePath)
+
+        const fileExtension: string = path.extname(data.filename)
+        const filehash: string = crypto.randomBytes(16).toString('hex')
+        const newFileName: string = `${filehash}${fileExtension}`
+        const nameWithFilePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
+
+        await this.saveImage(nameWithFilePath, data)
+        await this.repository.updateImageProfile(botId, nameWithFilePath)
+
+        const fileImageUrl: string = `${Config.FILE_IMAGE_URL}/${newFileName}`
+        await this.repository.updateBot(botId, Fields.ProfileImageUrl, fileImageUrl)
+    }
+
+    private getSubstringAfterLastSlash(input: string): string {
+        const lastSlashIndex = input.lastIndexOf('/')
+        if (lastSlashIndex === -1) {
+            return input
+        }
+        return input.substring(lastSlashIndex + 1)
+    }
+
+    private generateRandomNameWithFilePath(filePath: string, fileExt: string): string {
+        const filehash: string = crypto.randomBytes(16).toString('hex')
+        const newFileName: string = `${filehash}${fileExt}`
+        const nameWithFilePath: string = path.join(filePath, newFileName)
+        return nameWithFilePath
+    }
+
+    private async saveImage(filePath: string, data: any): Promise<void> {
+        const uploadFolder: string = Config.UPLOAD_FOLDER
+        if (!fsExtra.existsSync(filePath)) {
+            fsExtra.mkdirSync(uploadFolder, { recursive: true })
+        }
+
+        await pump(data.file, fsExtra.createWriteStream(filePath))
+    }
+
+    private async deleteImage(filePath: string) {
+        try {
+            fsExtra.removeSync(filePath)
+        } catch (error) { }
     }
 }

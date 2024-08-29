@@ -3,5 +3,6 @@ export enum Fields {
     Number = "number",
     BotId =  "botId",
     Status = "status",
-    GroupId = "groupId"
+    GroupId = "groupId",
+    ProfileImageUrl = "profileImageUrl"
 }

@@ -307,4 +307,9 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         const group = await this.returnGroupById(groupId)
         await group.sendMessage(message)
     }
+
+    async updatePhotoProfile(filePath: string): Promise<void> {
+        const media: MessageMedia = MessageMedia.fromFilePath(filePath)
+        await this.client.setProfilePicture(media)
+    }
 }
