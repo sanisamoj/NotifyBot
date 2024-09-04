@@ -25,11 +25,12 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
             })
         })
 
-        const timeout: number = 120000
+        const timeout: number = 180000 // 3 minutes
         const timeoutId = setTimeout(async () => {
             console.log('O QR Code não foi escaneado a tempo. Fechando o navegador...')
             await this.destroy()
         }, timeout)
+
 
         this.client.on('qr', (qr: string) => {
             qrcode.generate(qr, { small: true })
@@ -159,7 +160,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         const notifyBotService: NotifyBotService = new NotifyBotService()
         await notifyBotService.setBotStatus(notifyBotStatus)
 
-        if(this.config?.queueRabbitMqPermission) {
+        if (this.config?.queueRabbitMqPermission) {
             this.notifyBotStatus(notifyBotStatus)
         }
     }

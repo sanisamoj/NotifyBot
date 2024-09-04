@@ -36,7 +36,8 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
             console.log('Session name: ', session)
         }, {
             mkdirFolderToken: Config.SAVE_VENOM_BOTS_FILE_PATH,
-            headless: 'new'
+            headless: 'new',
+            autoClose: 180000
         }).then((client) => {
             this.client = client
             this.start(client)
