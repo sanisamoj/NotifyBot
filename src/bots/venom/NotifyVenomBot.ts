@@ -100,12 +100,13 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     private createHandleMessageInfo(message: Message, isGroup: boolean): HandleMessageInfo {
         const from: string = isGroup && message.author ? message.author.replace("@c.us", "") : message.from.replace("@c.us", "")
         const groupId: string | null = isGroup ? message.from.replace("@g.us", "") : null
+        const messageInObject: string = message.isMedia ? `MEDIA$text=${message.body}` : message.body
     
         return {
             botId: this.id,
             groupId: groupId,
             from: from,
-            message: message.body,
+            message: messageInObject,
             createdAt: new Date().toISOString()
         }
     }
