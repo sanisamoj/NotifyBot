@@ -15,5 +15,6 @@ export enum Errors {
     InvalidToken = "Invalid token!",
     JwtMustBeProvided = "jwt must be provided",
     NoDocumentsMatchedQuery = "No documents matched the query.",
-    TheBotIsAlreadyRunning = "The bot is already running."
+    TheBotIsAlreadyRunning = "The bot is already running.",
+    ThisBotIsUnableToPerformThisAction = "This bot is unable to perform this action."
 }

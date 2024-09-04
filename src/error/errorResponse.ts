@@ -87,6 +87,12 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.TooManyRequests,
                 details: null
             }
+        case Errors.ThisBotIsUnableToPerformThisAction:
+            return {
+                statusCode: 422,
+                error: Errors.ThisBotIsUnableToPerformThisAction,
+                details: "Emergency bots are limited in certain functionalities."
+            }
         default:
             return {
                 statusCode: 500,

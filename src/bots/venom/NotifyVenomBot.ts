@@ -10,6 +10,7 @@ import { NotifyBotStatus } from '../../data/models/interfaces/NotifyBotStatus'
 import { NotifyBotService } from '../services/NotifyBotService'
 import { AbstractNotifyBot } from '../../data/models/abstracts/AbstractNotifyBot'
 import { GroupChat } from 'whatsapp-web.js'
+import { Errors } from '../../data/models/enums/Errors'
 
 export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     constructor(botData: BotCreateData) {
@@ -177,31 +178,31 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     }
 
     createGroup(title: string, description: string, imgProfileUrl: string | null, adminsOfThisGroup: string[]): Promise<string> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     returnGroupById(groupId: string): Promise<GroupChat> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     addParticipantToGroup(groupId: string, phone: string): Promise<void> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     removeParticipantFromTheGroup(groupId: string, phone: string): Promise<void> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     deleteGroup(groupId: string): Promise<void> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     sendMessageToTheGroup(groupId: string, message: string): Promise<void> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     updatePhotoProfile(filePath: string): Promise<void> {
-        throw new Error('This bot is unable to perform this action.')
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
 }
