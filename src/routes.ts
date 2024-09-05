@@ -32,8 +32,10 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.post("/bot/:id/message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessage)
     // Rota responsável por enviar uma mensagem com imagem com o bot
     fastify.post("/bot/:id/img-message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessageWithImage)
+    // Rota responsável por enviar uma mensagem com imagem com o bot para um grupo
+    fastify.post("/bot/:id/img-message-group", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessageWithImageToTheGroup)
     // Rota responsável por ataulizar a imagem de perfil do bot
-    fastify.post("/bot/:id/img-profile", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().updateImageProfile)
+    fastify.put("/bot/:id/img-profile", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().updateImageProfile)
     // Rota responsável por enviar uma mensagem para um grupo
     fastify.post("/bot/:id/group/message", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().sendMessageToGroup)
     // Rota responsável por retornar um bot

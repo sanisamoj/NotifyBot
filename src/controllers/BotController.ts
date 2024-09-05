@@ -11,15 +11,7 @@ import { GroupInfo } from "../data/models/interfaces/GroupInfo"
 import { UpdateBotConfigRequest } from "../data/models/interfaces/UpdateBotConfigRequest"
 import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
-import * as fsExtra from 'fs-extra'
-import * as path from 'path'
-import { Config } from "../Config"
-import util from 'util'
-import crypto from 'crypto'
-import { pipeline } from 'node:stream'
 import { PromoterBotConfig } from "../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
-
-const pump = util.promisify(pipeline)
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
@@ -80,6 +72,13 @@ export class BotController {
         const { id: botId } = request.params as { id: string }
         const data: any = await request.file()
         await new BotService().sendMessageWithImage(botId, data)
+        return reply.status(200).send()
+    }
+
+    async sendMessageWithImageToTheGroup(request: any, reply: FastifyReply) {
+        const { id: botId } = request.params as { id: string }
+        const data: any = await request.file()
+        await new BotService().sendMessageWithImageToTheGroup(botId, data)
         return reply.status(200).send()
     }
 

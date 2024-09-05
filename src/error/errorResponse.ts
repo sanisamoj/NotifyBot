@@ -63,6 +63,12 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.JwtMustBeProvided,
                 details: null
             }
+        case Errors.JwtExpired:
+            return {
+                statusCode: 401,
+                error: Errors.JwtExpired,
+                details: null
+            }
         case Errors.InvalidToken:
             return {
                 statusCode: 401,

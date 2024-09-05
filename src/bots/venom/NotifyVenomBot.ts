@@ -1,4 +1,4 @@
-import { create, Whatsapp, Message, GroupCreation } from 'venom-bot'
+import { create, Whatsapp, Message } from 'venom-bot'
 import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { NotifyBotConfig } from '../../data/models/interfaces/NotifyBotConfig'
@@ -171,6 +171,13 @@ export class NotifyVenomBot extends AbstractNotifyBot<Whatsapp> {
     // Send a message with image
     async sendMessageWithImage(sendTo: string, message: string, imageFilePath: string) {
         await this.client.sendImage(sendTo, imageFilePath, 'image-name.jpg', message)
+    }
+
+    sendMessageWithImageToTheGroup(groupId: string, message: string | null, imageFilePath: string): Promise<void> {
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
+    }
+    sendMessageWithImageUrlToTheGroup(groupId: string, message: string | null, imageUrl: string): Promise<void> {
+        throw new Error(Errors.ThisBotIsUnableToPerformThisAction)
     }
 
     // Send a message with image url

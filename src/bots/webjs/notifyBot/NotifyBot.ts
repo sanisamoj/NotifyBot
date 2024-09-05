@@ -2,7 +2,7 @@ import * as fsExtra from 'fs-extra'
 import * as path from 'path'
 import { BotCreateData } from '../../../data/models/interfaces/BotCreateData'
 import { Config } from '../../../Config'
-import { Call, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
+import { Call, Chat, Client, GroupChat, LocalAuth, Message, MessageMedia, WAState } from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
 import { Errors } from '../../../data/models/enums/Errors'
 import { NotifyBotConfig } from '../../../data/models/interfaces/NotifyBotConfig'
@@ -215,6 +215,28 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
             await this.client.sendMessage(`${sendTo}@c.us`, media, { caption: message })
         } else {
             await this.client.sendMessage(`${sendTo}@c.us`, media)
+        }
+    }
+
+    // Send a message with image to the group
+    async sendMessageWithImageToTheGroup(groupId: string, message: string | null, imageFilePath: string) {
+        const group: Chat = await this.client.getChatById(`${groupId}@g.us`)
+        const media: MessageMedia = MessageMedia.fromFilePath(imageFilePath)
+        if (message) {
+            await group.sendMessage(media, { caption: message })
+        } else {
+            await group.sendMessage(media)
+        }
+    }
+
+    // Send a message with image url to the group
+    async sendMessageWithImageUrlToTheGroup(groupId: string, message: string | null, imageUrl: string) {
+        const group: Chat = await this.client.getChatById(`${groupId}@g.us`)
+        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl)
+        if (message) {
+            await group.sendMessage(media, { caption: message })
+        } else {
+            await group.sendMessage(media)
         }
     }
 

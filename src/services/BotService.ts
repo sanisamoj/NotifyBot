@@ -107,6 +107,22 @@ export class BotService {
         this.deleteImage(filePath)
     }
 
+    async sendMessageWithImageToTheGroup(botId: string, data: any) {
+        const fileExtension: string = path.extname(data.filename)
+        const newFileName: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
+        const filePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
+
+        const group: string = data.fields.group.value
+        let messageText: string | null = null
+        if (data.fields && data.fields.message) {
+            messageText = data.fields.message.value
+        }
+
+        await this.saveImage(filePath, data)
+        await this.repository.sendMessageWithImageToTheGroup(botId, group, messageText, filePath)
+        this.deleteImage(filePath)
+    }
+
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
         const groupInfo: GroupInfo = await this.repository.createGroup(createGroupInfo)
         return groupInfo
