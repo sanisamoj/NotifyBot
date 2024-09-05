@@ -22,6 +22,8 @@ export async function routes(fastify: any, options: RouteShorthandOptions): Prom
     fastify.post("/bot/all/stop", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().stopAllBots)
     // Rota responsável por reiniciar um bot
     fastify.post("/bot/:id/restart", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().restartBot)
+    // Rota responsável por reiniciar todos os bots
+    fastify.post("/bot/restart", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().restartAllBot)
     // Rota responsável por iniciar os bots de emergência
     fastify.post("/emergency/bots", { preHandler: [authentication.isAdminAuthenticated], config: rateLimitLightweight }, new BotController().initializeEmergencyBots)
     // Rota responsável por inicia um bot de emergência

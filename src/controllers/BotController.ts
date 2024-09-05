@@ -43,6 +43,11 @@ export class BotController {
         return reply.status(200).send()
     }
 
+    async restartAllBot(request: FastifyRequest, reply: FastifyReply) {
+        await new BotService().restartAllBots()
+        return reply.status(200).send()
+    }
+
     async initializeEmergencyBots(request: FastifyRequest, reply: FastifyReply) {
         await new BotService().initializeEmergencyBots()
         return reply.status(200).send()
