@@ -134,7 +134,13 @@ export class DefaultRepository extends DatabaseRepository {
         }
 
         const qrCode: string = bot?.qrCode ?? "undefined"
-        const groups: GroupInfo[] = await this.getAllGroupsFromTheBot(botId)
+        let groups: GroupInfo[]
+
+        try {
+            groups = await this.getAllGroupsFromTheBot(botId)
+        } catch (error: any) {
+            groups = []
+        }
 
         const botInfo: BotInfo = {
             id: botId,
