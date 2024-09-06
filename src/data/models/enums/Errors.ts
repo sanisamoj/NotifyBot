@@ -17,5 +17,6 @@ export enum Errors {
     NoDocumentsMatchedQuery = "No documents matched the query.",
     TheBotIsAlreadyRunning = "The bot is already running.",
     ThisBotIsUnableToPerformThisAction = "This bot is unable to perform this action.",
-    JwtExpired = "jwt expired"
+    JwtExpired = "jwt expired",
+    RateLimitExceeded = "Rate limit exceeded"
 }

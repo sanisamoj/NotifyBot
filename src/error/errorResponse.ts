@@ -21,7 +21,7 @@ export function errorResponse(error: string): ErrorResponse {
                 error: Errors.BotNotFound,
                 details: null
             }
-        case Errors.BotNotFound:
+        case Errors.TheBotIsAlreadyRunning:
             return {
                 statusCode: 403,
                 error: Errors.TheBotIsAlreadyRunning,
@@ -84,7 +84,7 @@ export function errorResponse(error: string): ErrorResponse {
         case Errors.InvalidSignature:
             return {
                 statusCode: 401,
-                error: Errors.InvalidToken,
+                error: Errors.InvalidSignature,
                 details: null
             }
         case Errors.TooManyRequests:
@@ -100,6 +100,13 @@ export function errorResponse(error: string): ErrorResponse {
                 details: "Emergency bots are limited in certain functionalities."
             }
         default:
+            if (error.includes(Errors.RateLimitExceeded)) {
+                return {
+                    statusCode: 422,
+                    error: Errors.RateLimitExceeded,
+                    details: "Emergency bots are limited in certain functionalities."
+                }
+            }
             return {
                 statusCode: 500,
                 error: error,

@@ -9,7 +9,7 @@ export class AdminService {
     async login(email: string, password: string): Promise<AdminLoginResponse> {
         this.adminCredentialsMatch(email, password)
         const secretKey: string = process.env.ADMIN_SECRET_KEY as string
-        const token: string = authorizationToken("00@", "Moderator", secretKey, "400d")
+        const token: string = authorizationToken("00@", "Moderator", secretKey, "1095d") // 3 days
         const adminLoginResponse: AdminLoginResponse = { token: token }
         return adminLoginResponse
     }
