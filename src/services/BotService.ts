@@ -97,13 +97,14 @@ export class BotService {
 
     async sendMessageWithImage(botId: string, data: any) {
         const fileExtension: string = path.extname(data.filename)
-        const newFileName: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
-        const filePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
+        const filePath: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
 
-        const phone: string = data.fields.phone.value
+        const { fields } = data
+
+        const phone: string = fields.phone.value
         let messageText: string | null = null
         if (data.fields && data.fields.message) {
-            messageText = data.fields.message.value
+            messageText = fields.message.value
         }
 
         await this.saveImage(filePath, data)
@@ -113,13 +114,13 @@ export class BotService {
 
     async sendMessageWithImageToTheGroup(botId: string, data: any) {
         const fileExtension: string = path.extname(data.filename)
-        const newFileName: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
-        const filePath: string = path.join(Config.UPLOAD_FOLDER, newFileName)
+        const filePath: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
+        const { fields } = data
 
-        const group: string = data.fields.group.value
+        const group: string = fields.group.value
         let messageText: string | null = null
         if (data.fields && data.fields.message) {
-            messageText = data.fields.message.value
+            messageText = fields.message.value
         }
 
         await this.saveImage(filePath, data)

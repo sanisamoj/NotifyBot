@@ -104,7 +104,7 @@ export function errorResponse(error: string): ErrorResponse {
                 return {
                     statusCode: 422,
                     error: Errors.RateLimitExceeded,
-                    details: "Emergency bots are limited in certain functionalities."
+                    details: null
                 }
             }
             return {
