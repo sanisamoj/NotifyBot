@@ -24,6 +24,7 @@ import crypto from 'crypto'
 import { pipeline } from 'node:stream'
 import * as dotenv from 'dotenv'
 import { Fields } from "../data/models/enums/Fields"
+import { SendMessageImageUrl } from "../data/models/interfaces/SendMessageImageUrl"
 
 const pump = util.promisify(pipeline)
 dotenv.config()
@@ -112,6 +113,10 @@ export class BotService {
         this.deleteImage(filePath)
     }
 
+    async sendMessageWithImageUrl(botId: string, sendMessageImageUrl: SendMessageImageUrl) {
+        await this.repository.sendMessageWithImageUrl(botId, sendMessageImageUrl.to, sendMessageImageUrl.message, sendMessageImageUrl.imageUrl)
+    }
+
     async sendMessageWithImageToTheGroup(botId: string, data: any) {
         const fileExtension: string = path.extname(data.filename)
         const filePath: string = this.generateRandomNameWithFilePath(Config.UPLOAD_FOLDER, fileExtension)
@@ -126,6 +131,10 @@ export class BotService {
         await this.saveImage(filePath, data)
         await this.repository.sendMessageWithImageToTheGroup(botId, group, messageText, filePath)
         this.deleteImage(filePath)
+    }
+
+    async sendMessageWithImageUrlToTheGroup(botId: string, sendMessageImageUrl: SendMessageImageUrl) {
+        await this.repository.sendMessageWithImageUrlToTheGroup(botId, sendMessageImageUrl.to, sendMessageImageUrl.message, sendMessageImageUrl.imageUrl)
     }
 
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {

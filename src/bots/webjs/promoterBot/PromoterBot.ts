@@ -248,7 +248,7 @@ export class PromoterBot {
                             if (news.linkImg == null) {
                                 await chat.sendMessage(news.txt)
                             } else {
-                                const media: MessageMedia = await MessageMedia.fromUrl(news.linkImg)
+                                const media: MessageMedia = await MessageMedia.fromUrl(news.linkImg, { unsafeMime: true })
                                 chat.sendMessage(media, { caption: news.txt })
                             }
                         } catch (error) {

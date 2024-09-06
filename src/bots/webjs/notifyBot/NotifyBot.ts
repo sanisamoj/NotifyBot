@@ -211,10 +211,11 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     // Send a message with image
     async sendMessageWithImage(sendTo: string, message: string | null, imageFilePath: string) {
         const media: MessageMedia = MessageMedia.fromFilePath(imageFilePath)
+        const to = `${sendTo}@c.us`
         if (message) {
-            await this.client.sendMessage(`${sendTo}@c.us`, media, { caption: message })
+            await this.client.sendMessage(to, media, { caption: message })
         } else {
-            await this.client.sendMessage(`${sendTo}@c.us`, media)
+            await this.client.sendMessage(to, media)
         }
     }
 
@@ -232,7 +233,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     // Send a message with image url to the group
     async sendMessageWithImageUrlToTheGroup(groupId: string, message: string | null, imageUrl: string) {
         const group: Chat = await this.client.getChatById(`${groupId}@g.us`)
-        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl)
+        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl, { unsafeMime: true })
         if (message) {
             await group.sendMessage(media, { caption: message })
         } else {
@@ -241,9 +242,14 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     }
 
     // Send a message with image url
-    async sendMessageWithImageUrl(sendTo: string, message: string, imageUrl: string) {
-        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl)
-        await this.client.sendMessage(sendTo, media, { caption: message })
+    async sendMessageWithImageUrl(sendTo: string, message: string | null, imageUrl: string) {
+        const media: MessageMedia = await MessageMedia.fromUrl(imageUrl, { unsafeMime: true })
+        const to = `${sendTo}@c.us`
+        if(message) {
+            await this.client.sendMessage(to, media, { caption: message })
+        } else {
+            await this.client.sendMessage(to, media)
+        }
     }
 
     // Create a group

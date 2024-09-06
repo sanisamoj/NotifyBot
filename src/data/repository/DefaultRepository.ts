@@ -312,6 +312,15 @@ export class DefaultRepository extends DatabaseRepository {
         await notifyBot.sendMessageWithImageToTheGroup(to, message, filePath)
     }
 
+    async sendMessageWithImageUrl(botId: string, to: string, message: string | null, imageUrl: string): Promise<void> {
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
+        await notifyBot.sendMessageWithImageUrl(to, message, imageUrl)
+    }
+    async sendMessageWithImageUrlToTheGroup(botId: string, to: string, message: string | null, imageUrl: string): Promise<void> {
+        const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(botId)
+        await notifyBot.sendMessageWithImageUrlToTheGroup(to, message, imageUrl)
+    }
+
     async createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo> {
         const notifyBot: AbstractNotifyBot<Client | Whatsapp> = this.getNotifyBot(createGroupInfo.botId)
         const groupId: string = await notifyBot.createGroup(

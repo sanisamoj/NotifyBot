@@ -12,6 +12,7 @@ import { UpdateBotConfigRequest } from "../data/models/interfaces/UpdateBotConfi
 import { NotifyBotConfig } from "../data/models/interfaces/NotifyBotConfig"
 import { BotInfoWithPagination } from "../data/models/interfaces/BotInfoWithPagination"
 import { PromoterBotConfig } from "../bots/webjs/promoterBot/data/interfaces/PromoterBotConfig"
+import { SendMessageImageUrl } from "../data/models/interfaces/SendMessageImageUrl"
 
 export class BotController {
     async createBot(request: FastifyRequest, reply: FastifyReply) {
@@ -80,10 +81,24 @@ export class BotController {
         return reply.status(200).send()
     }
 
+    async sendMessageWithImageUrl(request: any, reply: FastifyReply) {
+        const { id: botId } = request.params as { id: string } 
+        const sendMessageImageUrl: SendMessageImageUrl = request.body as SendMessageImageUrl
+        await new BotService().sendMessageWithImageUrl(botId, sendMessageImageUrl)
+        return reply.status(200).send()
+    }
+
     async sendMessageWithImageToTheGroup(request: any, reply: FastifyReply) {
         const { id: botId } = request.params as { id: string }
         const data: any = await request.file()
         await new BotService().sendMessageWithImageToTheGroup(botId, data)
+        return reply.status(200).send()
+    }
+
+    async sendMessageWithImageUrlToTheGroup(request: any, reply: FastifyReply) {
+        const { id: botId } = request.params as { id: string } 
+        const sendMessageImageUrl: SendMessageImageUrl = request.body as SendMessageImageUrl
+        await new BotService().sendMessageWithImageUrlToTheGroup(botId, sendMessageImageUrl)
         return reply.status(200).send()
     }
 

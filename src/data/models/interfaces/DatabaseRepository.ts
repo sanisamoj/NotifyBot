@@ -28,7 +28,9 @@ export abstract class DatabaseRepository {
     abstract getPromoterBotConfig(botId: string): PromoterBotConfig | null
     abstract sendMessage(botId: string, to: string, message: string): Promise<void>
     abstract sendMessageWithImage(botId: string, to: string, message: string | null, filePath: string): Promise<void>
+    abstract sendMessageWithImageUrl(botId: string, to: string, message: string | null, imageUrl: string): Promise<void>
     abstract sendMessageWithImageToTheGroup(botId: string, to: string, message: string | null, filePath: string): Promise<void>
+    abstract sendMessageWithImageUrlToTheGroup(botId: string, to: string, message: string | null, imageUrl: string): Promise<void>
     abstract createGroup(createGroupInfo: CreateGroupInfo): Promise<GroupInfo>
     abstract getGroupById(botId: string, groupId: string): Promise<GroupInfo>
     abstract getAllGroupsFromTheBot(botId: string): Promise<GroupInfo[]>
