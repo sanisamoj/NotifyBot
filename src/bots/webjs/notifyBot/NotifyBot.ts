@@ -127,7 +127,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
             }
 
             // Sending messages to RabbitMQ
-            if (this.config.queueRabbitMqHandleMessage) {
+            if (this.config.queueRabbitMqHandleMessage && this.config.queueRabbitMqPermission) {
                 const handleMessageInfo: HandleMessageInfo = this.createHandleMessageInfo(message, isGroup)
                 await this.sendHandleMessageInfoToRabbitMQ(handleMessageInfo)
             }
