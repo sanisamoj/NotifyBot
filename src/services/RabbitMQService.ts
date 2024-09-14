@@ -32,11 +32,15 @@ export class RabbitMQService {
         await this.channel.assertQueue(queueName, { durable: true })
 
         this.channel.consume(queueName, (msg) => {
-            if (msg !== null) {
-                const messageJson = msg.content.toString()
-                const message = JSON.parse(messageJson) as T
-                onMessage(message)
-                this.channel.ack(msg)
+            try {
+                if (msg !== null) {
+                    const messageJson = msg.content.toString()
+                    const message = JSON.parse(messageJson) as T
+                    onMessage(message)
+                    this.channel.ack(msg)
+                }
+            } catch (error) {
+                console.log(error)
             }
         }, { noAck: false })
     }
