@@ -52,8 +52,11 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
         })
 
         this.client.on('change_state', (status: WAState) => {
-            console.log(`Status: ${status}`)
             switch (status) {
+                case WAState.OPENING:
+                    this.status = BotStatus.STARTED
+                    this.setBotStatus({ botId: this.id, status: BotStatus.STARTED })
+                    break
                 case WAState.CONFLICT:
                     this.status = BotStatus.CONFLICT
                     this.setBotStatus({ botId: this.id, status: BotStatus.CONFLICT })
@@ -245,7 +248,7 @@ export class NotifyBot extends AbstractNotifyBot<Client> {
     async sendMessageWithImageUrl(sendTo: string, message: string | null, imageUrl: string) {
         const media: MessageMedia = await MessageMedia.fromUrl(imageUrl, { unsafeMime: true })
         const to = `${sendTo}@c.us`
-        if(message) {
+        if (message) {
             await this.client.sendMessage(to, media, { caption: message })
         } else {
             await this.client.sendMessage(to, media)

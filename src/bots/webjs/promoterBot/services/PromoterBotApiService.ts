@@ -72,7 +72,6 @@ export class PromoterBotApiService {
         try {
             const response = await api.get(apiUrl)
             arrayNews.push(response.data)
-            console.log(response.data)
         } catch (error) {
             console.error("Error fetching news:", error)
             throw new Error("Failed to fetch news.")
